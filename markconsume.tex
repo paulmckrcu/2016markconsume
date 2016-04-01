@@ -139,6 +139,42 @@ and evaluates each against a set of representative use cases.
 \section{Representative Use Cases}
 \label{sec:Representative Use Cases}
 
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 struct rcutest {
+ 2   int a;
+ 3   int b;
+ 4   int c;
+ 5 };
+ 6
+ 7 struct rcutest1 {
+ 8   int a;
+ 9   struct rcutest rt;
+10 };
+11
+12 std::atomic<rcutest *> gp;
+13 std::atomic<rcutest1 *> g1p;
+14 std::atomic<int *> gip;
+15 struct rcutest *gslp; /* Global scope, local usage. */
+16 std::atomic<rcutest *> gsgp;
+17
+18 #define rcu_assign_pointer(p, v) \
+19   atomic_store_explicit(&(p), (v),
+20                         std::memory_order_release);
+21 #define rcu_dereference(p) \
+22   atomic_load_explicit(&(p), std::memory_order_consume);
+\end{verbatim}
+}
+\caption{Common Definitions}
+\label{fig:Common Definitions}
+\end{figure}
+
+This section will presnt common definitions (see
+Figure~\ref{fig:Common Definitions})
+several use cases shown in the list below,
+and finally evaluation criteria.
+
 \begin{enumerate}
 \item	Simple case.
 \item	Function in via parameter.
@@ -146,10 +182,151 @@ and evaluates each against a set of representative use cases.
 \item	Function both in and out, but different chains.
 \item	Dependency chain fanning out.
 \item	Dependency chain fanning in.
-\item	Dependency chain fanning both in and.
+\item	Dependency chain fanning both in and out.
 \item	Conditional compilation of endpoint accesses.
 \item	Examples involving handoff to locking.
 \end{enumerate}
+
+Each of the above use cases is covered in one of the following sections.
+
+\subsection{Simple Case}
+\label{sec:Simple Case}
+
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 void thread0(void)
+ 2 {
+ 3   struct rcutest *p;
+ 4
+ 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 6   assert(p);
+ 7   p->a = 42;
+ 8   assert(p->a != 43);
+ 9   rcu_assign_pointer(gp, p);
+10 }
+11
+12 void thread1(void)
+13 {
+14   struct rcutest *p;
+15
+16   p = rcu_dereference(gp);
+17   if (p)
+18     p->a = 43;
+19 }
+\end{verbatim}
+}
+\caption{Simple Case}
+\label{fig:Simple Case}
+\end{figure}
+
+The simple case is shown in
+Figure~\ref{fig:Simple Case}.
+Here, the dependency chain extends from line~16 through line~18,
+where it terminates.
+Given the simplicity and compactness of this example, any reasonable
+proposal should handle this example simply and naturally.
+
+\subsection{In via Function Parameter}
+\label{sec:In via Function Parameter}
+
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 void thread0(void)
+ 2 {
+ 3   struct rcutest *p;
+ 4
+ 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 6   assert(p);
+ 7   p->a = 42;
+ 8   rcu_assign_pointer(gp, p);
+ 9 }
+10
+11 void
+12 thread1_help(struct rcutest *q)
+13 {
+14   if (q)
+15     assert(q->a == 42);
+16 }
+17
+18 void thread1(void)
+19 {
+20   struct rcutest *p;
+21
+22   p = rcu_dereference(gp);
+23   thread1_help(p);
+24 }
+\end{verbatim}
+}
+\caption{In via Function Parameter}
+\label{fig:In via Function Parameter}
+\end{figure}
+
+Figure~\ref{fig:In via Function Parameter}
+shows an example dependency chain that begins at line~22,
+enters function \co{thread1_help()} at line~23,
+and then extending from line~12 to line~15 in the called function.
+This is a common encapsulation technique.
+
+\subsection{Out via Function Return}
+\label{sec:Out via Function Return}
+
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 void thread0(void)
+ 2 {
+ 3   struct rcutest *p;
+ 4
+ 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 6   assert(p);
+ 7   p->a = 42;
+ 8   rcu_assign_pointer(gp, p);
+ 9 }
+10
+11 struct rcutest *thread1_help(void)
+12 {
+13   return rcu_dereference(gp);
+14 }
+15
+16 void thread1(void)
+17 {
+18   struct rcutest *p;
+19
+20   p = thread1_help();
+21   if (p)
+22     assert(p->a == 42);
+23 }
+\end{verbatim}
+}
+\caption{Out via Function Return}
+\label{fig:Out via Function Return}
+\end{figure}
+
+Figure~\ref{fig:Out via Function Return}
+shows a dependency chain exiting a function.
+It starts at line~21, is returned to line~20, and
+terminates on line~22.
+This is also a common enscapsuulation technique.
+
+\subsection{In and Out, But Different Chains}
+\label{sec:In and Out, But Different Chains}
+
+\subsection{Chain Fanning Out}
+\label{sec:Chain Fanning Out}
+
+\subsection{Chain Fanning In}
+\label{sec:Chain Fanning In}
+
+\subsection{Chain Fanning In and Out}
+\label{sec:Chain Fanning In and Out}
+
+\subsection{Conditional Compilation of Chain Endpoints}
+\label{sec:Conditional Compilation of Chain Endpoints}
+
+\subsection{Handoff to Locking}
+\label{sec:Handoff to Locking}
 
 \subsection{Evaluation Criteria}
 \label{sec:Evaluation Criteria}
