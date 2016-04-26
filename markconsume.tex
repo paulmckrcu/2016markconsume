@@ -313,14 +313,238 @@ This is also a common enscapsuulation technique.
 \subsection{In and Out, But Different Chains}
 \label{sec:In and Out, But Different Chains}
 
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 void thread0(void)
+ 2 {
+ 3   struct rcutest *p;
+ 4
+ 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 6   assert(p);
+ 7   p->a = 42;
+ 8   rcu_assign_pointer(gp, p);
+ 9
+10   p = (struct rcutest *)malloc(sizeof(*p));
+11   assert(p);
+12   p->a = 43;
+13   rcu_assign_pointer(gsgp, p);
+14 }
+15
+16 struct rcutest *thread1_help(struct rcutest *p)
+17 {
+18   if (p)
+19     assert(p->a == 42);
+20   return rcu_dereference(gsgp);
+21 }
+22
+23 void thread1(void)
+24 {
+25   struct rcutest *p;
+26
+27   p = rcu_dereference(gp);
+28   p = thread1_help(p);
+29   if (p)
+30     assert(p->a == 43);
+31 }
+\end{verbatim}
+}
+\caption{In and Out, But Different Chains}
+\label{fig:In and Out, But Different Chains}
+\end{figure}
+
+Figure~\ref{fig:In and Out, But Different Chains}
+shows an example where a dependency chain enters a function
+(\co{thread1_help()} on lines~16-21)
+and a dependency chain leaves that same function,
+but where they are different chains.
+
 \subsection{Chain Fanning Out}
 \label{sec:Chain Fanning Out}
+
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 void thread0(void)
+ 2 {
+ 3   struct rcutest *p;
+ 4
+ 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 6   assert(p);
+ 7   p->a = 42;
+ 8   rcu_assign_pointer(gp, p);
+ 9 }
+10
+11 void
+12 thread1_help1(struct rcutest *q)
+13 {
+14   if (q)
+15     assert(q->a == 42);
+16 }
+17
+18 void
+19 thread1_help2(struct rcutest *q)
+20 {
+21   if (q)
+22     assert(q->a != 43);
+23 }
+24
+25 void thread1(void)
+26 {
+27   struct rcutest *p;
+28
+29   p = rcu_dereference(gp);
+30   thread1_help1(p);
+31   thread1_help2(p);
+32 }
+\end{verbatim}
+}
+\caption{Chain Fanning Out}
+\label{fig:Chain Fanning Out}
+\end{figure}
+
+Figure~\ref{fig:Chain Fanning Out}
+shows a dependency chain fanning out, courtesy of the \co{thread1()}
+function's calls to \co{thread1_help1()} and \co{thread1_help2()}.
+This is a common pattern in the Linux kernel, as it supports
+abstraction of data structures, for example, allowing common RCU-protected
+data structures to be aggregated into a larger RCU-protected data
+structure.
+In this scenario, \co{thread1_help1()} might implement one type of
+RCU-protected structure and \co{thread1_help2()} might implement
+another.
 
 \subsection{Chain Fanning In}
 \label{sec:Chain Fanning In}
 
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 void thread0(void)
+ 2 {
+ 3   struct rcutest *p;
+ 4   struct rcutest1 *p1;
+ 5
+ 6   p = (struct rcutest *)malloc(sizeof(*p));
+ 7   assert(p);
+ 8   p->a = 42;
+ 9   rcu_assign_pointer(gp, p);
+10
+11   p1 = (struct rcutest *)malloc(sizeof(*p1));
+12   assert(p1);
+13   p1->a = 41;
+14   p1->rt->a = 42;
+15   rcu_assign_pointer(g1p, p1);
+16 }
+17
+18 void
+19 thread1_help(struct rcutest *q)
+20 {
+21   if (q)
+22     assert(q->a == 42);
+23 }
+24
+25 void thread1(void)
+26 {
+27   struct rcutest *p;
+28
+29   p = rcu_dereference(gp);
+30   thread1_help(p);
+31 }
+32
+33 void thread2(void)
+34 {
+35   struct rcutest1 *p1;
+36
+37   p1 = rcu_dereference(g1p);
+38   thread1_help(&p1->rt);
+39 }
+\end{verbatim}
+}
+\caption{Chain Fanning In}
+\label{fig:Chain Fanning In}
+\end{figure}
+
+Figure~\ref{fig:Chain Fanning In}
+demonstrates different dependency chains fanning into the same function,
+in this case \co{thread1_help()}.
+This fanning-in is also used to support abstraction, for example,
+allowing a given implementation of an RCU-protected data structure
+to be aggregated into several different data structures.
+
 \subsection{Chain Fanning In and Out}
 \label{sec:Chain Fanning In and Out}
+
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 void thread0(void)
+ 2 {
+ 3   struct rcutest *p;
+ 4   struct rcutest1 *p1;
+ 5
+ 6   p = (struct rcutest *)malloc(sizeof(*p));
+ 7   assert(p);
+ 8   p->a = 42;
+ 9   p->b = 43;
+10   rcu_assign_pointer(gp, p);
+11
+12   p1 = (struct rcutest *)malloc(sizeof(*p1));
+13   assert(p1);
+14   p1->a = 41;
+15   p1->rt->a = 42;
+16   p1->rt->b = 43;
+17   rcu_assign_pointer(g1p, p1);
+18 }
+19
+20 void
+21 thread1a_help(struct rcutest *q)
+22 {
+23   assert(q->a == 42);
+24 }
+25
+26 void
+27 thread1b_help(struct rcutest *q)
+28 {
+29   assert(q->b == 43);
+30 }
+31
+32 void
+33 thread1_help(struct rcutest *q)
+34 {
+35   if (q) {
+36     thread1a_help(q);
+37     thread1b_help(q);
+38   }
+39 }
+40
+41 void thread1(void)
+42 {
+43   struct rcutest *p;
+44
+45   p = rcu_dereference(gp);
+46   thread1_help(p);
+47 }
+48
+49 void thread2(void)
+50 {
+51   struct rcutest1 *p1;
+52
+53   p1 = rcu_dereference(g1p);
+54   thread1_help(&p1->rt);
+55 }
+\end{verbatim}
+}
+\caption{Chain Fanning In and Out}
+\label{fig:Chain Fanning In and Out}
+\end{figure}
+
+Figure~\ref{fig:Chain Fanning In and Out}
+shows dependency chains fanning both in and out,
+which permits composition of the types of abstraction
+described in
+Sections~\ref{sec:Chain Fanning Out}
+and~\ref{sec:Chain Fanning In}.
 
 \subsection{Conditional Compilation of Chain Endpoints}
 \label{sec:Conditional Compilation of Chain Endpoints}
