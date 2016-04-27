@@ -656,10 +656,11 @@ on the value of the C-preprocessor macro \co{FOO}.
 17   if (p) {
 18     assert(p->a >= 42);
 19     spin_lock(&p->lock);
-20     p->a++;
-21     spin_unlock(&p->lock);
-22   }
-23 }
+20     p = std::kill_dependency(p);
+21     p->a++;
+22     spin_unlock(&p->lock);
+23   }
+24 }
 \end{verbatim}
 }
 \caption{Handoff to Locking}
@@ -672,17 +673,24 @@ primitives, in this case, locking.
 The dependency chain starts at line~16 and continues through line~18
 and~19.
 However, once line~19 has completed, the code is under the protection
-of \co{p->lock}.
-This lock protects the increment on line~20.
+of \co{p->lock}, so line~20 explicitly ends the dependency chain.
+The lock then protects the increment on line~21.
 
 It is also possible to hand off protection from RCU to reference counting,
 explicit memory barriers, transactional memory, and so on.
+
+Note that the \co{std::kill_dependency()} on line~20 will typically have
+no effect on code generation in this case.
 
 \subsection{Evaluation Criteria}
 \label{sec:Evaluation Criteria}
 
 \begin{enumerate}
-\item	Modifications...
+\item	Ease of compilation.
+\item	Ease of modification of programs.
+\item	Precise specification of dependency chains.
+\item	Support for cross-function dependency chains.
+\item	Support for cross-compilation-unit dependency chains.
 \item	Compatibility with C.
 \end{enumerate}
 
