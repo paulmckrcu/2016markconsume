@@ -708,37 +708,17 @@ to be handled in a reasonably natural manner.
 \subsection{Mark Translation Unit}
 \label{sec:Mark Translation Unit}
 
-Within the language, translation-unit marking could be accomplished by
-a pragma or by a language feature that changed the way pointers are
-implemented.
-A compiler command-line argument could also be used, but this is of
-course outside the standard.
-It would be desirable for marked translation units to be able to
-be linked with unmarked translation units.
-
-This approach could be useful in cases where only a few of the translation
-units contain dependency chains.
-However, software-engineering considerations would likely cause many such
-projects to mark all the translation units.
-This approach will therefore be left out of the remainder of this document.
+\input{transunit}
 
 \subsection{Mark Range of Code}
 \label{sec:Mark Range of Code}
 
-Ranges of code could be marked by pragmas, through use of C preprocessor
-symbols, or via other ad-hoc means.
-However, again, software-engineering considerations would likely cause
-many such projects to mark all the translation units.
-This approach will therefore be left out of the remainder of this document.
+\input{rangeofcode}
 
 \subsection{Mark Functions}
 \label{sec:Mark Functions}
 
-Functions containing dependency chains could be marked with
-an attribute (for example, something like
-\co{[[function_carries_dependencies]]}) or
-a keyword (for example, something like
-\co{_FunctionCarriesDependencies}).
+\input{markfunc}
 
 \subsection{Mark Objects}
 \label{sec:Mark Objects}
@@ -753,65 +733,27 @@ operations carried out on a given marked object.
 \subsubsection{Attribute}
 \label{sec:Attribute}
 
-This approach, suggested by Clark Nelson, generalizes the
-\co{[[carries_dependency]]} attribute specified in the C++11 standard
-so that it applies to objects, including variables, formal parameters,
-return values, and class members.
-This paper further modifies this proposed attribute so as to also restrict
-it to pointer-like objects.
+\input{markobjattr}
 
 \subsubsection{Type Qualifier}
 \label{sec:Type Qualifier}
 
-This approach, put forward by Torvald Riegel in response to
-Linus Torvalds's spirited criticisms of the current C11 and C++11
-wording, introduces a new \co{value_dep_preserving} type qualifier.
-Objects marked with this type qualifier carry dependencies.
+\input{markobjtypeq}
 
 \subsubsection{Object Modifier}
 \label{sec:Object Modifier}
 
-This approach uses a keyword that does not participate in type checking,
-for example, a \co{_Carries_dependency} keyword.
-This might be treated in a manner similar to a storage class.
-It need not necessarily interact with the type system.
+\input{markobjmod}
 
 \subsubsection{Template}
 \label{sec:Template}
 
-This approach, suggested off-list by JF Bastien, creates a
-\co{depending_ptr}\footnote{
-	Arbitrarily chosen name with no Google hits.}
-template to which a pointer-like type is passed.
-This approach allows implementers considerable freedom, as they can
-hook into the \co{->} and \co{*} if need be, and also use the C++
-\co{delete} keyword to prohibit problematic operations.
-
-This approach would need to be augmented with a non-template solution
-for C, for example, the object-modifier approach from
-the previous section.
+\input{markobjtemplate}
 
 \subsection{Mark Root/Leaf Pairs}
 \label{sec:Mark Root/Leaf Pairs}
 
-These approaches create point-to-point associations between
-\co{memory_order_consume} loads and the memory references that depend
-on them.
-Function calls can be handled by using the arguments of the function
-call and the function parameters as intermediate points in the
-association.
-Function returns can be handled by using the function return
-declaration and the function return value.
-
-However, these point-to-point associations are required to gracefully handle
-bushy dependency trees, dependency trees that fan both in and out,
-and conditional compilation.
-Any scheme that relies on directly referencing a specific location
-in the source code will fall afoul of these requirements.
-
-One approach is to use a unique identifier for each dependency tree,
-and associate each relevant point in the code with the corresponding
-identifiers.
+\input{markrootleaf}
 
 \section{Evaluation}
 \label{sec:Evaluation}

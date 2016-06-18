@@ -1,0 +1,18 @@
+These approaches create point-to-point associations between
+\co{memory_order_consume} loads and the memory references that depend
+on them.
+Function calls can be handled by using the arguments of the function
+call and the function parameters as intermediate points in the
+association.
+Function returns can be handled by using the function return
+declaration and the function return value.
+
+However, these point-to-point associations are required to gracefully handle
+bushy dependency trees, dependency trees that fan both in and out,
+and conditional compilation.
+Any scheme that relies on directly referencing a specific location
+in the source code will fall afoul of these requirements.
+
+One approach is to use a unique identifier for each dependency tree,
+and associate each relevant point in the code with the corresponding
+identifiers.

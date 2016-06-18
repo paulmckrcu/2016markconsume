@@ -1,0 +1,11 @@
+This approach, suggested off-list by JF Bastien, creates a
+\co{depending_ptr}\footnote{
+	Arbitrarily chosen name with no Google hits.}
+template to which a pointer-like type is passed.
+This approach allows implementers considerable freedom, as they can
+hook into the \co{->} and \co{*} if need be, and also use the C++
+\co{delete} keyword to prohibit problematic operations.
+
+This approach would need to be augmented with a non-template solution
+for C, for example, the object-modifier approach from
+the previous section.
