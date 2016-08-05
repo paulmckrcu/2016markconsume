@@ -2,3 +2,401 @@ This approach uses a keyword that does not participate in type checking,
 for example, a \co{_Carries_dependency} keyword.
 This might be treated in a manner similar to a storage class.
 It need not necessarily interact with the type system.
+
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 void thread0(void)
+ 2 {
+ 3   struct rcutest *p;
+ 4
+ 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 6   assert(p);
+ 7   p->a = 42;
+ 8   assert(p->a != 43);
+ 9   rcu_assign_pointer(gp, p);
+10 }
+11
+12 void thread1(void)
+13 {
+14   struct rcutest _Carries_dependency *p;
+15
+16   p = rcu_dereference(gp);
+17   if (p)
+18     p->a = 43;
+19 }
+\end{verbatim}
+}
+\caption{Object Modifier: Simple Case}
+\label{fig:Object Modifier: Simple Case}
+\end{figure}
+
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 void thread0(void)
+ 2 {
+ 3   struct rcutest *p;
+ 4
+ 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 6   assert(p);
+ 7   p->a = 42;
+ 8   rcu_assign_pointer(gp, p);
+ 9 }
+10
+11 void
+12 thread1_help(struct rcutest _Carries_dependency *q)
+13 {
+14   if (q)
+15     assert(q->a == 42);
+16 }
+17
+18 void thread1(void)
+19 {
+20   struct rcutest _Carries_dependency *p;
+21
+22   p = rcu_dereference(gp);
+23   thread1_help(p);
+24 }
+\end{verbatim}
+}
+\caption{Object Modifier: In via Function Parameter}
+\label{fig:Object Modifier: In via Function Parameter}
+\end{figure}
+
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 void thread0(void)
+ 2 {
+ 3   struct rcutest *p;
+ 4
+ 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 6   assert(p);
+ 7   p->a = 42;
+ 8   rcu_assign_pointer(gp, p);
+ 9 }
+10
+11 struct rcutest _Carries_dependency *thread1_help(void)
+12 {
+13   return rcu_dereference(gp);
+14 }
+15
+16 void thread1(void)
+17 {
+18   struct rcutest _Carries_dependency *p;
+19
+20   p = thread1_help();
+21   if (p)
+22     assert(p->a == 42);
+23 }
+\end{verbatim}
+}
+\caption{Object Modifier: Out via Function Return}
+\label{fig:Object Modifier: Out via Function Return}
+\end{figure}
+
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 void thread0(void)
+ 2 {
+ 3   struct rcutest *p;
+ 4
+ 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 6   assert(p);
+ 7   p->a = 42;
+ 8   rcu_assign_pointer(gp, p);
+ 9
+10   p = (struct rcutest *)malloc(sizeof(*p));
+11   assert(p);
+12   p->a = 43;
+13   rcu_assign_pointer(gsgp, p);
+14 }
+15
+16 struct rcutest _Carries_dependency *
+17 thread1_help(struct rcutest _Carries_dependency *p)
+18 {
+19   if (p)
+20     assert(p->a == 42);
+21   return rcu_dereference(gsgp);
+22 }
+23
+24 void thread1(void)
+25 {
+26   struct rcutest _Carries_dependency *p;
+27
+28   p = rcu_dereference(gp);
+29   p = thread1_help(p);
+30   if (p)
+31     assert(p->a == 43);
+32 }
+\end{verbatim}
+}
+\caption{Object Modifier: In and Out, But Different Chains}
+\label{fig:Object Modifier: In and Out, But Different Chains}
+\end{figure}
+
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 void thread0(void)
+ 2 {
+ 3   struct rcutest *p;
+ 4
+ 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 6   assert(p);
+ 7   p->a = 42;
+ 8   rcu_assign_pointer(gp, p);
+ 9 }
+10
+11 void
+12 thread1_help1(struct rcutest _Carries_dependency *q)
+13 {
+14   if (q)
+15     assert(q->a == 42);
+16 }
+17
+18 void
+19 thread1_help2(struct rcutest _Carries_dependency *q)
+20 {
+21   if (q)
+22     assert(q->a != 43);
+23 }
+24
+25 void thread1(void)
+26 {
+27   struct rcutest _Carries_dependency *p;
+28
+29   p = rcu_dereference(gp);
+30   thread1_help1(p);
+31   thread1_help2(p);
+32 }
+\end{verbatim}
+}
+\caption{Object Modifier: Chain Fanning Out}
+\label{fig:Object Modifier: Chain Fanning Out}
+\end{figure}
+
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 void thread0(void)
+ 2 {
+ 3   struct rcutest *p;
+ 4   struct rcutest1 *p1;
+ 5
+ 6   p = (struct rcutest *)malloc(sizeof(*p));
+ 7   assert(p);
+ 8   p->a = 42;
+ 9   rcu_assign_pointer(gp, p);
+10
+11   p1 = (struct rcutest *)malloc(sizeof(*p1));
+12   assert(p1);
+13   p1->a = 41;
+14   p1->rt->a = 42;
+15   rcu_assign_pointer(g1p, p1);
+16 }
+17
+18 void
+19 thread1_help(struct rcutest _Carries_dependency *q)
+20 {
+21   if (q)
+22     assert(q->a == 42);
+23 }
+24
+25 void thread1(void)
+26 {
+27   struct rcutest _Carries_dependency *p;
+28
+29   p = rcu_dereference(gp);
+30   thread1_help(p);
+31 }
+32
+33 void thread2(void)
+34 {
+35   struct rcutest1 _Carries_dependency *p1;
+36
+37   p1 = rcu_dereference(g1p);
+38   thread1_help(&p1->rt);
+39 }
+\end{verbatim}
+}
+\caption{Object Modifier: Chain Fanning In}
+\label{fig:Object Modifier: Chain Fanning In}
+\end{figure}
+
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 void thread0(void)
+ 2 {
+ 3   struct rcutest *p;
+ 4   struct rcutest1 *p1;
+ 5
+ 6   p = (struct rcutest *)malloc(sizeof(*p));
+ 7   assert(p);
+ 8   p->a = 42;
+ 9   p->b = 43;
+10   rcu_assign_pointer(gp, p);
+11
+12   p1 = (struct rcutest *)malloc(sizeof(*p1));
+13   assert(p1);
+14   p1->a = 41;
+15   p1->rt->a = 42;
+16   p1->rt->b = 43;
+17   rcu_assign_pointer(g1p, p1);
+18 }
+19
+20 void
+21 thread1a_help(struct rcutest _Carries_dependency *q)
+22 {
+23   assert(q->a == 42);
+24 }
+25
+26 void
+27 thread1b_help(struct rcutest _Carries_dependency *q)
+28 {
+29   assert(q->b == 43);
+30 }
+31
+32 void
+33 thread1_help(struct rcutest _Carries_dependency *q)
+34 {
+35   if (q) {
+36     thread1a_help(q);
+37     thread1b_help(q);
+38   }
+39 }
+40
+41 void thread1(void)
+42 {
+43   struct rcutest _Carries_dependency *p;
+44
+45   p = rcu_dereference(gp);
+46   thread1_help(p);
+47 }
+48
+49 void thread2(void)
+50 {
+51   struct rcutest1 _Carries_dependency *p1;
+52
+53   p1 = rcu_dereference(g1p);
+54   thread1_help(&p1->rt);
+55 }
+\end{verbatim}
+}
+\caption{Object Modifier: Chain Fanning In and Out}
+\label{fig:Object Modifier: Chain Fanning In and Out}
+\end{figure}
+
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 void thread0(void)
+ 2 {
+ 3   struct rcutest *p;
+ 4   struct rcutest1 *p1;
+ 5
+ 6   p = (struct rcutest *)malloc(sizeof(*p));
+ 7   assert(p);
+ 8   p->a = 42;
+ 9   p->b = 43;
+10   rcu_assign_pointer(gp, p);
+11
+12   p1 = (struct rcutest *)malloc(sizeof(*p1));
+13   assert(p1);
+14   p1->a = 41;
+15   p1->rt->a = 42;
+16   p1->rt->b = 43;
+17   rcu_assign_pointer(g1p, p1);
+18 }
+19
+20 #ifdef FOO
+21 void
+22 thread1a_help(struct rcutest _Carries_dependency *q)
+23 {
+24   assert(q->a == 42);
+25 }
+26 #endif
+27
+28 void
+29 thread1b_help(struct rcutest _Carries_dependency *q)
+30 {
+31   assert(q->b == 43);
+32 }
+33
+34 void
+35 thread1_help(struct rcutest _Carries_dependency *q)
+36 {
+37   if (q) {
+38 #ifdef FOO
+39     thread1a_help(q);
+40 #endif
+41     thread1b_help(q);
+42   }
+43 }
+44
+45 void thread1(void)
+46 {
+47   struct rcutest _Carries_dependency *p;
+48
+49   p = rcu_dereference(gp);
+50   thread1_help(p);
+51 }
+52
+53 void thread2(void)
+54 {
+55   struct rcutest1 _Carries_dependency *p1;
+56
+57   p1 = rcu_dereference(g1p);
+58   thread1_help(&p1->rt);
+59 }
+\end{verbatim}
+}
+\caption{Object Modifier: Conditional Compilation of Chain Endpoints}
+\label{fig:Object Modifier: Conditional Compilation of Chain Endpoints}
+\end{figure}
+
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 void thread0(void)
+ 2 {
+ 3   struct rcutest *p;
+ 4
+ 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 6   assert(p);
+ 7   p->a = 42;
+ 8   assert(p->a != 43);
+ 9   rcu_assign_pointer(gp, p);
+10 }
+11
+12 void thread1(void)
+13 {
+14   struct rcutest _Carries_dependency *p;
+15
+16   p = rcu_dereference(gp);
+17   if (p) {
+18     assert(p->a >= 42);
+19     spin_lock(&p->lock);
+20     p = std::kill_dependency(p);
+21     p->a++;
+22     spin_unlock(&p->lock);
+23   }
+24 }
+\end{verbatim}
+}
+\caption{Object Modifier: Handoff to Locking}
+\label{fig:Object Modifier: Handoff to Locking}
+\end{figure}
+
+Figures~\ref{fig:Object Modifier: Simple Case}--\ref{fig:Object Modifier: Handoff to Locking}
+show how object modifiers can be applied to each of the examples
+introduced in Section~\ref{fig:Common Definitions}.
+These changes are straightforward markings of local variables, function
+parameters, and return-value types.
+Object modifiers therefore easily support the use cases in the Linux
+kernel.\footnote{
+	Give or take a strong distaste for any sort of marking scheme
+	on the part of numerous Linux-kernel community members.}
