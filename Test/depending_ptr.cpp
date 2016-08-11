@@ -3,6 +3,11 @@ template<typename T> class depending_ptr;
 
 template<typename T>
 class depending_ptr {
+public:
+	// Constructors
+	depending_ptr(T v);
+	depending_ptr(T& v);
+
 	// Unary operators
 	bool operator!(); // Prefix logical-not (is-NULL) operator
 	T* operator&(); // Prefix address-of operator
@@ -14,6 +19,21 @@ private:
 	int operator~(); // No prefix bitwise complement operator
 	T dp_rep;
 };
+
+
+// Constructors
+
+template<typename T>
+depending_ptr<T>::depending_ptr(T v)
+{
+	this->dp_rep = v;
+}
+
+template<typename T>
+depending_ptr<T>::depending_ptr(T& v)
+{
+	this->dp_rep = v;
+}
 
 
 // Unary operators
@@ -34,7 +54,7 @@ T* depending_ptr<T>::operator&() // Prefix address-of operator
 template<typename T>
 T& depending_ptr<T>::operator*() // Prefix indirection operator
 {
-	return *this.dp_rep;
+	return *this->dp_rep;
 }
 
 template<typename T>
@@ -55,8 +75,9 @@ T depending_ptr<T>::operator++(int) // Postfix increment operator
 
 int main(int argc, char **argv)
 {
-	char *cp = "abcde";
-	depending_ptr<char *> p = &cp[1];
+	char *cp = (char *)"abcde";
+	depending_ptr<char *> p(&cp[1]);
 
+	stdout << *p;
 	return 0;
 }
