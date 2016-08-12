@@ -9,8 +9,6 @@ namespace std {
 	bool pointer_cmp_le_dep(void *p, void *q);
 }
 
-template<typename T> class depending_ptr;
-
 template<typename T>
 class depending_ptr {
 public:
