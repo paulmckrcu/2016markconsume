@@ -81,15 +81,15 @@ int main(int argc, char **argv)
 	std::cout << " * ";
 	std::cout << *q;
 
-	p = rcu_dereference(cp);
-	std::cout << "\nrcu_dereference(cp): " << p;
-	p = rcu_dereference(&ap);
-	std::cout << "\nrcu_dereference(&ap): " << p;
+	p = rcu_consume(cp);
+	std::cout << "\nrcu_consume(cp): " << p;
+	p = rcu_consume(&ap);
+	std::cout << "\nrcu_consume(&ap): " << p;
 
-	cp1 = rcu_assign_pointer(&cp2, cp);
-	std::cout << "\nrcu_assign_pointer(&cp2, cp): " << cp1 << " -> " << cp2;
-	cp1 = rcu_assign_pointer(&ap, cp);
-	std::cout << "\nrcu_assign_pointer(&ap, cp): " << cp1 << " -> " << ap;
+	cp1 = rcu_store_release(&cp2, cp);
+	std::cout << "\nrcu_store_release(&cp2, cp): " << cp1 << " -> " << cp2;
+	cp1 = rcu_store_release(&ap, cp);
+	std::cout << "\nrcu_store_release(&ap, cp): " << cp1 << " -> " << ap;
 
 	std::cout << "\n";
 	return 0;
