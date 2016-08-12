@@ -435,7 +435,7 @@ another.
 11   p1 = (struct rcutest *)malloc(sizeof(*p1));
 12   assert(p1);
 13   p1->a = 41;
-14   p1->rt->a = 42;
+14   p1->rt.a = 42;
 15   rcu_assign_pointer(g1p, p1);
 16 }
 17
@@ -494,8 +494,8 @@ to be aggregated into several different data structures.
 12   p1 = (struct rcutest *)malloc(sizeof(*p1));
 13   assert(p1);
 14   p1->a = 41;
-15   p1->rt->a = 42;
-16   p1->rt->b = 43;
+15   p1->rt.a = 42;
+16   p1->rt.b = 43;
 17   rcu_assign_pointer(g1p, p1);
 18 }
 19
@@ -571,8 +571,8 @@ and~\ref{sec:Chain Fanning In}.
 12   p1 = (struct rcutest *)malloc(sizeof(*p1));
 13   assert(p1);
 14   p1->a = 41;
-15   p1->rt->a = 42;
-16   p1->rt->b = 43;
+15   p1->rt.a = 42;
+16   p1->rt.b = 43;
 17   rcu_assign_pointer(g1p, p1);
 18 }
 19
