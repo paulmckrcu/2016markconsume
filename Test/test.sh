@@ -25,3 +25,10 @@ g++ -std=c++11 -g -o depending_ptr_fanin depending_ptr_fanin.cpp -lpthread &&
 echo depending_ptr_faninout
 g++ -std=c++11 -g -o depending_ptr_faninout depending_ptr_faninout.cpp -lpthread &&
 	./depending_ptr_faninout
+
+echo depending_ptr_condcomp
+g++ -std=c++11 -g -o depending_ptr_condcomp depending_ptr_condcomp.cpp -lpthread &&
+	./depending_ptr_condcomp
+echo depending_ptr_condcomp FOO
+g++ -std=c++11 -g -DFOO -o depending_ptr_condcomp depending_ptr_condcomp.cpp -lpthread &&
+	./depending_ptr_condcomp

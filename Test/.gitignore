@@ -7,3 +7,4 @@ depending_ptr_inout
 depending_ptr_fanout
 depending_ptr_fanin
 depending_ptr_faninout
+depending_ptr_condcomp
