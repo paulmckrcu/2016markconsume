@@ -27,6 +27,7 @@ public:
 	T* operator--(); // Prefix decrement operator
 	T* operator--(int); // Postfix decrement operator
 	operator void*();
+	T operator[](long int);
 
 	// Binary relational operators
 	bool operator==(T *v);
@@ -135,6 +136,12 @@ depending_ptr<T>::operator void*() // Conversion to void* pointer
 	return (void *)this->dp_rep;
 }
 
+template<typename T>
+T depending_ptr<T>::operator[](long int idx)
+{
+	return this->dp_rep[idx];
+}
+
 
 // Binary relational operators
 
@@ -230,6 +237,10 @@ int main(int argc, char **argv)
 	std::cout << !p;
 	std::cout << "\nPrefix !nullptr: ";
 	std::cout << !q;
+	std::cout << "\nPostfix [2]: ";
+	std::cout << p[2];
+	std::cout << "\nPostfix [-1]: ";
+	std::cout << p[-1];
 
 	// Binary operators
 	std::cout << "\nInfix ==: ";
