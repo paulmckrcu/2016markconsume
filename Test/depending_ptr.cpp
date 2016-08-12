@@ -43,28 +43,28 @@ public:
 	class depending_ptr<T> operator-(long idx);
 	class depending_ptr<T> operator-=(long idx);
 
-private:
 	// Disabled operators.  Yes, they could work around with double...
-	int operator~();
-	int operator+();
-	int operator-();
-	int operator&(long int);
-	int operator&=(long int);
-	int operator%(long int);
-	int operator%=(long int);
-	int operator*(long int);
-	int operator*=(long int);
-	int operator/(long int);
-	int operator/=(long int);
-	int operator<<(long int);
-	int operator<<=(long int);
-	int operator>>(long int);
-	int operator>>=(long int);
-	int operator^(long int);
-	int operator^=(long int);
-	int operator|(long int);
-	int operator|=(long int);
+	int operator~() = delete;
+	int operator+() = delete;
+	int operator-() = delete;
+	int operator&(long int) = delete;
+	int operator&=(long int) = delete;
+	int operator%(long int) = delete;
+	int operator%=(long int) = delete;
+	int operator*(long int) = delete;
+	int operator*=(long int) = delete;
+	int operator/(long int) = delete;
+	int operator/=(long int) = delete;
+	int operator<<(long int) = delete;
+	int operator<<=(long int) = delete;
+	int operator>>(long int) = delete;
+	int operator>>=(long int) = delete;
+	int operator^(long int) = delete;
+	int operator^=(long int) = delete;
+	int operator|(long int) = delete;
+	int operator|=(long int) = delete;
 
+private:
 	T *dp_rep;
 };
 
