@@ -19,7 +19,7 @@ public:
 
 	// Unary operators
 	bool operator!(); // Prefix logical-not (is-NULL) operator
-	T** operator&(); // Prefix address-of operator
+	class depending_ptr<T>* operator&(); // Prefix address-of operator
 	// No prefix bitwise complement operator (private)
 	T operator*(); // Prefix indirection operator
 	class depending_ptr<T> operator++(); // Prefix increment operator
@@ -87,9 +87,9 @@ bool depending_ptr<T>::operator!() // Prefix logical-not (is-NULL) operator
 }
 
 template<typename T>
-T** depending_ptr<T>::operator&() // Prefix address-of operator
+class depending_ptr<T>* depending_ptr<T>::operator&()
 {
-	return &this->dp_rep;
+	return this;
 }
 
 template<typename T>
