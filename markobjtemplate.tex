@@ -9,3 +9,473 @@ hook into the \co{->} and \co{*} if need be, and also use the C++
 This approach would need to be augmented with a non-template solution
 for C, for example, the object-modifier approach from
 the previous section.
+
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 template<typename T> class depending_ptr {
+ 2 public:
+ 3   depending_ptr(T *v);
+ 4   depending_ptr();
+ 5   bool operator!();
+ 6   class depending_ptr<T>* operator&();
+ 7   T operator*();
+ 8   T *operator->();
+ 9   class depending_ptr<T> operator++();
+10   class depending_ptr<T> operator++(int);
+11   class depending_ptr<T> operator--();
+12   class depending_ptr<T> operator--(int);
+13   operator T*();
+14   T operator[](long int);
+15   bool operator==(T *v);
+16   bool operator!=(T *v);
+17   bool operator>(T *v);
+18   bool operator>=(T *v);
+19   bool operator<(T *v);
+20   bool operator<=(T *v);
+21   class depending_ptr<T> operator+(long idx);
+22   class depending_ptr<T> operator+=(long idx);
+23   class depending_ptr<T> operator-(long idx);
+24   class depending_ptr<T> operator-=(long idx);
+25   int operator~() = delete;
+26   int operator+() = delete;
+27   int operator-() = delete;
+28   int operator&(long int) = delete;
+29   int operator&=(long int) = delete;
+30   int operator%(long int) = delete;
+31   int operator%=(long int) = delete;
+32   int operator*(long int) = delete;
+33   int operator*=(long int) = delete;
+34   int operator/(long int) = delete;
+35   int operator/=(long int) = delete;
+36   int operator<<(long int) = delete;
+37   int operator<<=(long int) = delete;
+38   int operator>>(long int) = delete;
+39   int operator>>=(long int) = delete;
+40   int operator^(long int) = delete;
+41   int operator^=(long int) = delete;
+42   int operator|(long int) = delete;
+43   int operator|=(long int) = delete;
+44 private:
+45   T *dp_rep;
+46 };
+\end{verbatim}
+}
+\caption{Template: Declaration}
+\label{fig:Template: Declaration}
+\end{figure}
+
+Figure~\ref{fig:Template: Declaration}
+shows the resulting template declaration, each member function of which
+has a straightforward definition.
+Note especially that the relational operators are defined in terms of
+\co{pointer_cmp_eq_dep()},
+\co{pointer_cmp_ne_dep()},
+\co{pointer_cmp_gt_dep()},
+\co{pointer_cmp_ge_dep()},
+\co{pointer_cmp_lt_dep()}, and
+\co{pointer_cmp_le_dep()},
+so that as long as the first argument to a relational operator is of type
+\co{class depending_ptr<T>},
+pointers may be safely compared without risk of breaking dependency chains.
+In addition, the operators that cannot be safely applied to
+dependency-bearing pointers have been deleted.\footnote{
+	The number of pointer-tagging algorithms should motivate
+	allowing bitwise operations on dependency-bearing
+	pointers, but this should be handled separately.}
+
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 void thread0(void)
+ 2 {
+ 3   struct rcutest *p;
+ 4
+ 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 6   assert(p);
+ 7   p->a = 42;
+ 8   assert(p->a != 43);
+ 9   rcu_store_release(&gp, p);
+10 }
+11
+12 void thread1(void)
+13 {
+14   depending_ptr<struct rcutest> p;
+15
+16   p = rcu_consume(&gp);
+17   if (p)
+18     p->a = 43;
+19 }
+\end{verbatim}
+}
+\caption{Template: Simple Case}
+\label{fig:Template: Simple Case}
+\end{figure}
+
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 void thread0(void)
+ 2 {
+ 3   struct rcutest *p;
+ 4
+ 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 6   assert(p);
+ 7   p->a = 42;
+ 8   rcu_store_release(&gp, p);
+ 9 }
+10
+11 void
+12 thread1_help(depending_ptr<struct rcutest> q)
+13 {
+14   if (q)
+15     assert(q->a == 42);
+16 }
+17
+18 void thread1(void)
+19 {
+20   depending_ptr<struct rcutest> p;
+21
+22   p = rcu_consume(&gp);
+23   thread1_help(p);
+24 }
+\end{verbatim}
+}
+\caption{Template: In via Function Parameter}
+\label{fig:Template: In via Function Parameter}
+\end{figure}
+
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 void thread0(void)
+ 2 {
+ 3   struct rcutest *p;
+ 4
+ 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 6   assert(p);
+ 7   p->a = 42;
+ 8   rcu_store_release(&gp, p);
+ 9 }
+10
+11 depending_ptr<struct rcutest> thread1_help(void)
+12 {
+13   return rcu_consume(&gp);
+14 }
+15
+16 void thread1(void)
+17 {
+18   depending_ptr<struct rcutest> p;
+19
+20   p = thread1_help();
+21   if (p)
+22     assert(p->a == 42);
+23 }
+\end{verbatim}
+}
+\caption{Template: Out via Function Return}
+\label{fig:Template: Out via Function Return}
+\end{figure}
+
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 void thread0(void)
+ 2 {
+ 3   struct rcutest *p;
+ 4
+ 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 6   assert(p);
+ 7   p->a = 42;
+ 8   rcu_store_release(&gp, p);
+ 9
+10   p = (struct rcutest *)malloc(sizeof(*p));
+11   assert(p);
+12   p->a = 43;
+13   rcu_store_release(&gsgp, p);
+14 }
+15
+16 depending_ptr<struct rcutest> 
+17 thread1_help(depending_ptr<struct rcutest> p)
+18 {
+19   if (p)
+20     assert(p->a == 42);
+21   return rcu_consume(&gsgp);
+22 }
+23
+24 void thread1(void)
+25 {
+26   depending_ptr<struct rcutest> p;
+27
+28   p = rcu_consume(&gp);
+29   p = thread1_help(p);
+30   if (p)
+31     assert(p->a == 43);
+32 }
+\end{verbatim}
+}
+\caption{Template: In and Out, But Different Chains}
+\label{fig:Template: In and Out, But Different Chains}
+\end{figure}
+
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 void thread0(void)
+ 2 {
+ 3   struct rcutest *p;
+ 4
+ 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 6   assert(p);
+ 7   p->a = 42;
+ 8   rcu_store_release(&gp, p);
+ 9 }
+10
+11 void
+12 thread1_help1(depending_ptr<struct rcutest> q)
+13 {
+14   if (q)
+15     assert(q->a == 42);
+16 }
+17
+18 void
+19 thread1_help2(depending_ptr<struct rcutest> q)
+20 {
+21   if (q)
+22     assert(q->a != 43);
+23 }
+24
+25 void thread1(void)
+26 {
+27   depending_ptr<struct rcutest> p;
+28
+29   p = rcu_consume(&gp);
+30   thread1_help1(p);
+31   thread1_help2(p);
+32 }
+\end{verbatim}
+}
+\caption{Template: Chain Fanning Out}
+\label{fig:Template: Chain Fanning Out}
+\end{figure}
+
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 void thread0(void)
+ 2 {
+ 3   struct rcutest *p;
+ 4   struct rcutest1 *p1;
+ 5
+ 6   p = (struct rcutest *)malloc(sizeof(*p));
+ 7   assert(p);
+ 8   p->a = 42;
+ 9   rcu_store_release(&gp, p);
+10
+11   p1 = (struct rcutest *)malloc(sizeof(*p1));
+12   assert(p1);
+13   p1->a = 41;
+14   p1->rt.a = 42;
+15   rcu_store_release(&g1p, p1);
+16 }
+17
+18 void
+19 thread1_help(depending_ptr<struct rcutest> q)
+20 {
+21   if (q)
+22     assert(q->a == 42);
+23 }
+24
+25 void thread1(void)
+26 {
+27   depending_ptr<struct rcutest> p;
+28
+29   p = rcu_consume(&gp);
+30   thread1_help(p);
+31 }
+32
+33 void thread2(void)
+34 {
+35   depending_ptr<struct rcutest1> p1;
+36
+37   p1 = rcu_consume(&g1p);
+38   thread1_help(&p1->rt);
+39 }
+\end{verbatim}
+}
+\caption{Template: Chain Fanning In}
+\label{fig:Template: Chain Fanning In}
+\end{figure}
+
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 void thread0(void)
+ 2 {
+ 3   struct rcutest *p;
+ 4   struct rcutest1 *p1;
+ 5
+ 6   p = (struct rcutest *)malloc(sizeof(*p));
+ 7   assert(p);
+ 8   p->a = 42;
+ 9   p->b = 43;
+10   rcu_store_release(&gp, p);
+11
+12   p1 = (struct rcutest *)malloc(sizeof(*p1));
+13   assert(p1);
+14   p1->a = 41;
+15   p1->rt.a = 42;
+16   p1->rt.b = 43;
+17   rcu_store_release(&g1p, p1);
+18 }
+19
+20 void
+21 thread1a_help(depending_ptr<struct rcutest> q)
+22 {
+23   assert(q->a == 42);
+24 }
+25
+26 void
+27 thread1b_help(depending_ptr<struct rcutest> q)
+28 {
+29   assert(q->b == 43);
+30 }
+31
+32 void
+33 thread1_help(depending_ptr<struct rcutest> q)
+34 {
+35   if (q) {
+36     thread1a_help(q);
+37     thread1b_help(q);
+38   }
+39 }
+40
+41 void thread1(void)
+42 {
+43   depending_ptr<struct rcutest> p;
+44
+45   p = rcu_consume(&gp);
+46   thread1_help(p);
+47 }
+48
+49 void thread2(void)
+50 {
+51   depending_ptr<struct rcutest1> p1;
+52
+53   p1 = rcu_consume(&g1p);
+54   thread1_help(&p1->rt);
+55 }
+\end{verbatim}
+}
+\caption{Template: Chain Fanning In and Out}
+\label{fig:Template: Chain Fanning In and Out}
+\end{figure}
+
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 void thread0(void)
+ 2 {
+ 3   struct rcutest *p;
+ 4   struct rcutest1 *p1;
+ 5
+ 6   p = (struct rcutest *)malloc(sizeof(*p));
+ 7   assert(p);
+ 8   p->a = 42;
+ 9   p->b = 43;
+10   rcu_store_release(&gp, p);
+11
+12   p1 = (struct rcutest *)malloc(sizeof(*p1));
+13   assert(p1);
+14   p1->a = 41;
+15   p1->rt.a = 42;
+16   p1->rt.b = 43;
+17   rcu_store_release(&g1p, p1);
+18 }
+19
+20 #ifdef FOO
+21 void
+22 thread1a_help(depending_ptr<struct rcutest> q)
+23 {
+24   assert(q->a == 42);
+25 }
+26 #endif
+27
+28 void
+29 thread1b_help(depending_ptr<struct rcutest> q)
+30 {
+31   assert(q->b == 43);
+32 }
+33
+34 void
+35 thread1_help(depending_ptr<struct rcutest> q)
+36 {
+37   if (q) {
+38 #ifdef FOO
+39     thread1a_help(q);
+40 #endif
+41     thread1b_help(q);
+42   }
+43 }
+44
+45 void thread1(void)
+46 {
+47   depending_ptr<struct rcutest> p;
+48
+49   p = rcu_consume(&gp);
+50   thread1_help(p);
+51 }
+52
+53 void thread2(void)
+54 {
+55   depending_ptr<struct rcutest1> p1;
+56
+57   p1 = rcu_consume(&g1p);
+58   thread1_help(&p1->rt);
+59 }
+\end{verbatim}
+}
+\caption{Template: Conditional Compilation of Chain Endpoints}
+\label{fig:Template: Conditional Compilation of Chain Endpoints}
+\end{figure}
+
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 void thread0(void)
+ 2 {
+ 3   struct rcutest *p;
+ 4
+ 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 6   assert(p);
+ 7   p->a = 42;
+ 8   assert(p->a != 43);
+ 9   rcu_store_release(&gp, p);
+10 }
+11
+12 void thread1(void)
+13 {
+14   depending_ptr<struct rcutest> p;
+15
+16   p = rcu_consume(&gp);
+17   if (p) {
+18     assert(p->a >= 42);
+19     spin_lock(&p->lock);
+20     p = std::kill_dependency(p);
+21     p->a++;
+22     spin_unlock(&p->lock);
+23   }
+24 }
+\end{verbatim}
+}
+\caption{Template: Handoff to Locking}
+\label{fig:Template: Handoff to Locking}
+\end{figure}
+
+Figures~\ref{fig:Template: Simple Case}--\ref{fig:Template: Handoff to Locking}
+show how templates can be applied to each of the examples
+introduced in Section~\ref{fig:Common Definitions}.
+As with the object-modifier approach in
+Section~\ref{sec:Object Modifier},
+these changes are straightforward markings of local variables, function
+parameters, and return-value types.
