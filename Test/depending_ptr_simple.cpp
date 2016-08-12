@@ -18,7 +18,7 @@ void *thread0(void *unused)
 
 void *thread1(void *unused)
 {
-	depending_ptr<struct rcutest> p(NULL);
+	depending_ptr<struct rcutest> p;
 
 	p = rcu_consume(&gp);
 	if (p)

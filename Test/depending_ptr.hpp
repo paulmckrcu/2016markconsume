@@ -15,6 +15,7 @@ class depending_ptr {
 public:
 	// Constructors
 	depending_ptr(T *v);
+	depending_ptr();
 
 	// Unary operators
 	bool operator!(); // Prefix logical-not (is-NULL) operator
@@ -75,6 +76,12 @@ template<typename T>
 depending_ptr<T>::depending_ptr(T *v)
 {
 	this->dp_rep = v;
+}
+
+template<typename T>
+depending_ptr<T>::depending_ptr()
+{
+	this->dp_rep = nullptr;
 }
 
 
