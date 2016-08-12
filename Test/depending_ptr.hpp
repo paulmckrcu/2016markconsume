@@ -21,6 +21,7 @@ public:
 	class depending_ptr<T>* operator&(); // Prefix address-of operator
 	// No prefix bitwise complement operator (private)
 	T operator*(); // Prefix indirection operator
+	T *operator->();
 	class depending_ptr<T> operator++(); // Prefix increment operator
 	class depending_ptr<T> operator++(int); // Postfix increment operator
 	class depending_ptr<T> operator--(); // Prefix decrement operator
@@ -95,6 +96,12 @@ template<typename T>
 T depending_ptr<T>::operator*() // Prefix indirection operator
 {
 	return *this->dp_rep;
+}
+
+template<typename T>
+T *depending_ptr<T>::operator->()
+{
+	return this->dp_rep;
 }
 
 template<typename T>
