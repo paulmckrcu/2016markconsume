@@ -1,4 +1,6 @@
 #include <iostream>
+#include <thread>
+#include <chrono>
 #include <assert.h>
 #include <pthread.h>
 #include "depending_ptr.hpp"
@@ -20,6 +22,7 @@ void *thread1(void *unused)
 {
 	depending_ptr<struct rcutest> p;
 
+	// std::this_thread::sleep_for(std::chrono::seconds(1));
 	p = rcu_consume(&gp);
 	if (p)
 		p->a = 43;
@@ -30,6 +33,7 @@ int main(int argc, char **argv)
 {
 	pthread_t tid0;
 	pthread_t tid1;
+	struct rcutest *p;
 
 	if (pthread_create(&tid0, NULL, thread0, NULL)) {
 		perror("pthread_create(thread0)");
@@ -48,6 +52,10 @@ int main(int argc, char **argv)
 		perror("pthread_join(tid1)");
 		return(-1);
 	}
+
+	p = gp.load();
+	std::cout << "p->a = " << p->a << "\n";
+	assert(p->a == 42 || p->a == 43);
 
 	return 0;
 }
