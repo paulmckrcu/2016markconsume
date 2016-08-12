@@ -38,7 +38,9 @@ public:
 
 	// Other binary operators
 	T* operator+(long idx);
+	T* operator+=(long idx);
 	T* operator-(long idx);
+	T* operator-=(long idx);
 
 private:
 	// Disabled operators
@@ -179,9 +181,21 @@ T* depending_ptr<T>::operator+(long idx)
 }
 
 template<typename T>
+T* depending_ptr<T>::operator+=(long idx)
+{
+	return this->dp_rep += idx;
+}
+
+template<typename T>
 T* depending_ptr<T>::operator-(long idx)
 {
 	return this->dp_rep - idx;
+}
+
+template<typename T>
+T* depending_ptr<T>::operator-=(long idx)
+{
+	return this->dp_rep -= idx;
 }
 
 #include <iostream>
@@ -230,6 +244,16 @@ int main(int argc, char **argv)
 	std::cout << p - 1;
 	std::cout << " * ";
 	std::cout << *(p - 1);
+
+	std::cout << "\nInfix += 1: ";
+	std::cout << (p += 1);
+	std::cout << " * ";
+	std::cout << *p;
+
+	std::cout << "\nInfix -= 1: ";
+	std::cout << (p -= 1);
+	std::cout << " * ";
+	std::cout << *p;
 
 	std::cout << "\n";
 	return 0;
