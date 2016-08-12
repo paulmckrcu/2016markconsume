@@ -222,17 +222,25 @@ int main(int argc, char **argv)
 	std::cout << "Initialized value: ";
 	std::cout << *p;
 	std::cout << "\nPostfix ++: ";
-	p++;
+	std::cout << p++;
+	std::cout << " result: ";
 	std::cout << *p;
+
 	std::cout << "\nPrefix ++: ";
-	++p;
+	std::cout << ++p;
+	std::cout << " result: ";
 	std::cout << *p;
+
 	std::cout << "\nPostfix --: ";
-	p--;
+	std::cout << p--;
+	std::cout << " result: ";
 	std::cout << *p;
+
 	std::cout << "\nPrefix --: ";
-	--p;
+	std::cout << --p;
+	std::cout << " result: ";
 	std::cout << *p;
+
 	std::cout << "\nPrefix &: ";
 	std::cout << &p;
 	std::cout << "\nPrefix *&: ";
