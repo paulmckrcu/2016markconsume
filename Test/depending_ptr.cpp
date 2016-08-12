@@ -283,6 +283,11 @@ int main(int argc, char **argv)
 	std::cout << " * ";
 	std::cout << *p;
 
+	std::cout << "\nInfix q = p: ";
+	std::cout << (q = p);
+	std::cout << " * ";
+	std::cout << *q;
+
 	std::cout << "\n";
 	return 0;
 }
