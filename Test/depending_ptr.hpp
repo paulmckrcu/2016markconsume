@@ -246,3 +246,8 @@ T *rcu_store_release(T **p, T *v)
 	*((volatile T **)p) = v;
 	return v;
 }
+
+// Linux-kernel compatibility macros, not for atomics
+
+#define rcu_dereference(p) rcu_consume(p)
+#define rcu_assign_pointer(p, v) rcu_store_release(&(p), v)

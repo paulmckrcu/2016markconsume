@@ -85,11 +85,15 @@ int main(int argc, char **argv)
 	std::cout << "\nrcu_consume(cp): " << p;
 	p = rcu_consume(&ap);
 	std::cout << "\nrcu_consume(&ap): " << p;
+	p = rcu_dereference(cp);
+	std::cout << "\nrcu_dereference(cp): " << p;
 
 	cp1 = rcu_store_release(&cp2, cp);
 	std::cout << "\nrcu_store_release(&cp2, cp): " << cp1 << " -> " << cp2;
-	cp1 = rcu_store_release(&ap, cp);
-	std::cout << "\nrcu_store_release(&ap, cp): " << cp1 << " -> " << ap;
+	cp1 = rcu_store_release(&ap, &cp[1]);
+	std::cout << "\nrcu_store_release(&ap, &cp[1]): " << cp1 << " -> " << ap;
+	cp1 = rcu_assign_pointer(ap, &cp[2]);
+	std::cout << "\nrcu_assign_pointer(ap, &cp[2]): " << cp1 << " -> " << ap;
 
 	std::cout << "\n";
 	return 0;
