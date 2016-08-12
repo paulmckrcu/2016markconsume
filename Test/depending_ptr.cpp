@@ -280,6 +280,11 @@ int main(int argc, char **argv)
 	std::cout << " * ";
 	std::cout << *p;
 
+	std::cout << "\nInfix = cp: ";
+	std::cout << (p = cp);
+	std::cout << " * ";
+	std::cout << *p;
+
 	std::cout << "\n";
 	return 0;
 }
