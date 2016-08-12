@@ -210,7 +210,7 @@ class depending_ptr<T> depending_ptr<T>::operator-=(long idx)
 	return *this;
 }
 
-// RCU functions
+// RCU functions for testing, not necessarily for standardization
 
 template<typename T>
 class depending_ptr<T> rcu_dereference(std::atomic<T> *p)
@@ -225,9 +225,24 @@ class depending_ptr<T> rcu_dereference(std::atomic<T> *p)
 template<typename T>
 class depending_ptr<T> rcu_dereference(T *p)
 {
-	// Change to __ATOMIC_CONSUME once it is fixed
-	// But will still need volatile cast...
+	// Alternatively, could cast p to volatile atomic...
 	class depending_ptr<T> temp(*(T* volatile *)&p);
 
 	return temp;
+}
+
+template<typename T>
+T *rcu_assign_pointer(std::atomic<T> *p, T *v)
+{
+	p.store(v, std::memory_order_release);
+	return v;
+}
+
+template<typename T>
+T *rcu_assign_pointer(T *p, T *v)
+{
+	// Alternatively, could cast p to volatile atomic...
+	atomic_thread_fence(std::memory_order_release);
+	*((volatile T *)(&p)) = v;
+	return v;
 }
