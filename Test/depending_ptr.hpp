@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <atomic>
 
 namespace std {
 	bool pointer_cmp_eq_dep(void *p, void *q);
@@ -207,4 +208,26 @@ class depending_ptr<T> depending_ptr<T>::operator-=(long idx)
 {
 	this->dp_rep -= idx;
 	return *this;
+}
+
+// RCU functions
+
+template<typename T>
+class depending_ptr<T> rcu_dereference(std::atomic<T> *p)
+{
+	volatile std::atomic<T> *q = p;
+	// Change to memory_order_consume once it is fixed
+	class depending_ptr<T> temp(q.load(std::memory_order_relaxed));
+
+	return temp;
+}
+
+template<typename T>
+class depending_ptr<T> rcu_dereference(T *p)
+{
+	// Change to __ATOMIC_CONSUME once it is fixed
+	// But will still need volatile cast...
+	class depending_ptr<T> temp(*(T* volatile *)&p);
+
+	return temp;
 }

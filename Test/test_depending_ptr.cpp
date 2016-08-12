@@ -78,6 +78,9 @@ int main(int argc, char **argv)
 	std::cout << " * ";
 	std::cout << *q;
 
+	p = rcu_dereference(cp);
+	std::cout << "\nrcu_dereferenc(cp): " << p;
+
 	std::cout << "\n";
 	return 0;
 }
