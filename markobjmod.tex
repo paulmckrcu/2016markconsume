@@ -194,7 +194,7 @@ It need not necessarily interact with the type system.
 11   p1 = (struct rcutest *)malloc(sizeof(*p1));
 12   assert(p1);
 13   p1->a = 41;
-14   p1->rt->a = 42;
+14   p1->rt.a = 42;
 15   rcu_assign_pointer(g1p, p1);
 16 }
 17

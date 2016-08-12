@@ -17,3 +17,7 @@ g++ -std=c++11 -g -o depending_ptr_inout depending_ptr_inout.cpp -lpthread &&
 echo depending_ptr_fanout
 g++ -std=c++11 -g -o depending_ptr_fanout depending_ptr_fanout.cpp -lpthread &&
 	./depending_ptr_fanout
+
+echo depending_ptr_fanin
+g++ -std=c++11 -g -o depending_ptr_fanin depending_ptr_fanin.cpp -lpthread &&
+	./depending_ptr_fanin

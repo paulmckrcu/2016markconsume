@@ -5,3 +5,4 @@ depending_ptr_inparam
 depending_ptr_outreturn
 depending_ptr_inout
 depending_ptr_fanout
+depending_ptr_fanin
