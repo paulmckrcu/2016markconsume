@@ -26,7 +26,7 @@ public:
 	class depending_ptr<T> operator++(int); // Postfix increment operator
 	class depending_ptr<T> operator--(); // Prefix decrement operator
 	class depending_ptr<T> operator--(int); // Postfix decrement operator
-	operator void*();
+	operator T*();
 	T operator[](long int);
 
 	// Binary relational operators
@@ -131,9 +131,9 @@ class depending_ptr<T> depending_ptr<T>::operator--(int)
 }
 
 template<typename T>
-depending_ptr<T>::operator void*() // Conversion to void* pointer
+depending_ptr<T>::operator T*() // Conversion to T* pointer
 {
-	return (void *)this->dp_rep;
+	return this->dp_rep;
 }
 
 template<typename T>
