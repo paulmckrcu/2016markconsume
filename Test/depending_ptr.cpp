@@ -1,3 +1,12 @@
+namespace std {
+	bool pointer_cmp_eq_dep(void *p, void *q);
+	bool pointer_cmp_ne_dep(void *p, void *q);
+	bool pointer_cmp_gt_dep(void *p, void *q);
+	bool pointer_cmp_ge_dep(void *p, void *q);
+	bool pointer_cmp_lt_dep(void *p, void *q);
+	bool pointer_cmp_le_dep(void *p, void *q);
+}
+
 template<typename T> class depending_ptr;
 
 template<typename T>
@@ -15,15 +24,37 @@ public:
 	T* operator++(int); // Postfix increment operator
 	T* operator--(); // Prefix decrement operator
 	T* operator--(int); // Postfix decrement operator
+	operator void*();
 
 	// Binary relational operators
 	bool operator==(T *v);
+	bool operator!=(T *v);
+	bool operator>(T *v);
+	bool operator>=(T *v);
+	bool operator<(T *v);
+	bool operator<=(T *v);
 
 private:
 	// Disabled operators
-	int operator~(); // No prefix bitwise complement operator
-	int operator+(); // No prefix plus operator
-	int operator-(); // No prefix negation operator
+	int operator~();
+	int operator+();
+	int operator-();
+	int operator&(long int);
+	int operator&=(long int);
+	int operator%(long int);
+	int operator%=(long int);
+	int operator*(long int);
+	int operator*=(long int);
+	int operator/(long int);
+	int operator/=(long int);
+	int operator<<(long int);
+	int operator<<=(long int);
+	int operator>>(long int);
+	int operator>>=(long int);
+	int operator^(long int);
+	int operator^=(long int);
+	int operator|(long int);
+	int operator|=(long int);
 
 	T *dp_rep;
 };
@@ -91,9 +122,48 @@ T* depending_ptr<T>::operator--(int) // Postfix decrement operator
 }
 
 template<typename T>
-bool depending_ptr<T>::operator==(T *v) // Infix equality relational operator
+depending_ptr<T>::operator void*() // Conversion to void* pointer
 {
-	return this->dp_rep == v; // BUGGY -- need external function
+	return (void *)this->dp_rep;
+}
+
+
+// Binary relational operators
+
+template<typename T>
+bool depending_ptr<T>::operator==(T *v)
+{
+	return std::pointer_cmp_eq_dep(this->dp_rep, v);
+}
+
+template<typename T>
+bool depending_ptr<T>::operator!=(T *v)
+{
+	return std::pointer_cmp_ne_dep(this->dp_rep, v);
+}
+
+template<typename T>
+bool depending_ptr<T>::operator<(T *v)
+{
+	return std::pointer_cmp_gt_dep(this->dp_rep, v);
+}
+
+template<typename T>
+bool depending_ptr<T>::operator<=(T *v)
+{
+	return std::pointer_cmp_ge_dep(this->dp_rep, v);
+}
+
+template<typename T>
+bool depending_ptr<T>::operator>(T *v)
+{
+	return std::pointer_cmp_lt_dep(this->dp_rep, v);
+}
+
+template<typename T>
+bool depending_ptr<T>::operator>=(T *v)
+{
+	return std::pointer_cmp_le_dep(this->dp_rep, v);
 }
 
 #include <iostream>
@@ -132,8 +202,8 @@ int main(int argc, char **argv)
 	// Binary operators
 	std::cout << "\nInfix ==: ";
 	std::cout << (p == nullptr);
-	// std::cout << " Again but equal: ";
-	// std::cout << (p == p);
+	std::cout << " Again but equal: ";
+	std::cout << (p == p);
 
 	std::cout << "\n";
 	return 0;
