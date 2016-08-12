@@ -39,9 +39,9 @@ public:
 
 	// Other binary operators
 	class depending_ptr<T> operator+(long idx);
-	T* operator+=(long idx);
-	T* operator-(long idx);
-	T* operator-=(long idx);
+	class depending_ptr<T> operator+=(long idx);
+	class depending_ptr<T> operator-(long idx);
+	class depending_ptr<T> operator-=(long idx);
 
 private:
 	// Disabled operators
@@ -190,21 +190,25 @@ class depending_ptr<T> depending_ptr<T>::operator+(long idx)
 }
 
 template<typename T>
-T* depending_ptr<T>::operator+=(long idx)
+class depending_ptr<T> depending_ptr<T>::operator+=(long idx)
 {
-	return this->dp_rep += idx;
+	this->dp_rep += idx;
+	return *this;
 }
 
 template<typename T>
-T* depending_ptr<T>::operator-(long idx)
+class depending_ptr<T> depending_ptr<T>::operator-(long idx)
 {
-	return this->dp_rep - idx;
+	class depending_ptr<T> temp(this->dp_rep - idx);
+
+	return temp;
 }
 
 template<typename T>
-T* depending_ptr<T>::operator-=(long idx)
+class depending_ptr<T> depending_ptr<T>::operator-=(long idx)
 {
-	return this->dp_rep -= idx;
+	this->dp_rep -= idx;
+	return *this;
 }
 
 #include <iostream>
