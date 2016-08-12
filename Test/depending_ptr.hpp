@@ -210,14 +210,16 @@ class depending_ptr<T> depending_ptr<T>::operator-=(long idx)
 	return *this;
 }
 
-// RCU functions for testing, not necessarily for standardization
+// RCU functions for testing, not necessarily for standardization.
+// For one thing, they conflict with the Linux-kernel C rcu_dereference()
+// macro...
 
 template<typename T>
-class depending_ptr<T> rcu_dereference(std::atomic<T> *p)
+class depending_ptr<T> rcu_dereference(std::atomic<T*> *p)
 {
-	volatile std::atomic<T> *q = p;
+	volatile std::atomic<T*> *q = p;
 	// Change to memory_order_consume once it is fixed
-	class depending_ptr<T> temp(q.load(std::memory_order_relaxed));
+	class depending_ptr<T> temp(q->load(std::memory_order_relaxed));
 
 	return temp;
 }
@@ -232,17 +234,17 @@ class depending_ptr<T> rcu_dereference(T *p)
 }
 
 template<typename T>
-T *rcu_assign_pointer(std::atomic<T> *p, T *v)
+T *rcu_assign_pointer(std::atomic<T*> *p, T *v)
 {
-	p.store(v, std::memory_order_release);
+	p->store(v, std::memory_order_release);
 	return v;
 }
 
 template<typename T>
-T *rcu_assign_pointer(T *p, T *v)
+T *rcu_assign_pointer(T **p, T *v)
 {
 	// Alternatively, could cast p to volatile atomic...
 	atomic_thread_fence(std::memory_order_release);
-	*((volatile T *)(&p)) = v;
+	*((volatile T **)p) = v;
 	return v;
 }

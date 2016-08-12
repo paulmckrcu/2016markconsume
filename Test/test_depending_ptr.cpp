@@ -4,8 +4,11 @@
 int main(int argc, char **argv)
 {
 	char *cp = (char *)"abcde";
+	char *cp1;
+	char *cp2;
 	depending_ptr<char> p(&cp[1]);
 	depending_ptr<char> q((char *)nullptr);
+	std::atomic<char *> ap(cp);
 
 	std::cout << "Initialized value: ";
 	std::cout << *p;
@@ -79,7 +82,14 @@ int main(int argc, char **argv)
 	std::cout << *q;
 
 	p = rcu_dereference(cp);
-	std::cout << "\nrcu_dereferenc(cp): " << p;
+	std::cout << "\nrcu_dereference(cp): " << p;
+	p = rcu_dereference(&ap);
+	std::cout << "\nrcu_dereference(&ap): " << p;
+
+	cp1 = rcu_assign_pointer(&cp2, cp);
+	std::cout << "\nrcu_assign_pointer(&cp2, cp): " << cp1 << " -> " << cp2;
+	cp1 = rcu_assign_pointer(&ap, cp);
+	std::cout << "\nrcu_assign_pointer(&ap, cp): " << cp1 << " -> " << ap;
 
 	std::cout << "\n";
 	return 0;
