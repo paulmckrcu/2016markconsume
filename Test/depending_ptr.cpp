@@ -22,10 +22,10 @@ public:
 	T** operator&(); // Prefix address-of operator
 	// No prefix bitwise complement operator (private)
 	T operator*(); // Prefix indirection operator
-	T* operator++(); // Prefix increment operator
-	T* operator++(int); // Postfix increment operator
-	T* operator--(); // Prefix decrement operator
-	T* operator--(int); // Postfix decrement operator
+	class depending_ptr<T> operator++(); // Prefix increment operator
+	class depending_ptr<T> operator++(int); // Postfix increment operator
+	class depending_ptr<T> operator--(); // Prefix decrement operator
+	class depending_ptr<T> operator--(int); // Postfix decrement operator
 	operator void*();
 	T operator[](long int);
 
@@ -44,7 +44,7 @@ public:
 	class depending_ptr<T> operator-=(long idx);
 
 private:
-	// Disabled operators
+	// Disabled operators.  Yes, they could work around with double...
 	int operator~();
 	int operator+();
 	int operator-();
@@ -99,32 +99,32 @@ T depending_ptr<T>::operator*() // Prefix indirection operator
 }
 
 template<typename T>
-T* depending_ptr<T>::operator++() // Prefix increment operator
+class depending_ptr<T> depending_ptr<T>::operator++() // Prefix increment operator
 {
 	++this->dp_rep;
-	return this->dp_rep;
+	return *this;
 }
 
 template<typename T>
-T* depending_ptr<T>::operator++(int) // Postfix increment operator
+class depending_ptr<T> depending_ptr<T>::operator++(int)
 {
-	T *temp = this->dp_rep;
+	class depending_ptr<T> temp(this->dp_rep);
 
 	++this->dp_rep;
 	return temp;
 }
 
 template<typename T>
-T* depending_ptr<T>::operator--() // Prefix decrement operator
+class depending_ptr<T> depending_ptr<T>::operator--()
 {
 	--this->dp_rep;
-	return this->dp_rep;
+	return *this;
 }
 
 template<typename T>
-T* depending_ptr<T>::operator--(int) // Postfix decrement operator
+class depending_ptr<T> depending_ptr<T>::operator--(int)
 {
-	T *temp = this->dp_rep;
+	class depending_ptr<T> temp(this->dp_rep);
 
 	--this->dp_rep;
 	return temp;
