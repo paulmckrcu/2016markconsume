@@ -2,3 +2,4 @@
 test_depending_ptr
 depending_ptr_simple
 depending_ptr_inparam
+depending_ptr_outreturn
