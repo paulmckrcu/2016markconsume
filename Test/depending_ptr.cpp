@@ -38,7 +38,7 @@ public:
 	bool operator<=(T *v);
 
 	// Other binary operators
-	T* operator+(long idx);
+	class depending_ptr<T> operator+(long idx);
 	T* operator+=(long idx);
 	T* operator-(long idx);
 	T* operator-=(long idx);
@@ -182,9 +182,11 @@ bool depending_ptr<T>::operator>=(T *v)
 }
 
 template<typename T>
-T* depending_ptr<T>::operator+(long idx)
+class depending_ptr<T> depending_ptr<T>::operator+(long idx)
 {
-	return this->dp_rep + idx;
+	class depending_ptr<T> temp(this->dp_rep + idx);
+
+	return temp;
 }
 
 template<typename T>
