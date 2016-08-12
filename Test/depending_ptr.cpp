@@ -1,3 +1,5 @@
+#include <cstdint>
+
 namespace std {
 	bool pointer_cmp_eq_dep(void *p, void *q);
 	bool pointer_cmp_ne_dep(void *p, void *q);
@@ -33,6 +35,10 @@ public:
 	bool operator>=(T *v);
 	bool operator<(T *v);
 	bool operator<=(T *v);
+
+	// Other binary operators
+	T* operator+(long idx);
+	T* operator-(long idx);
 
 private:
 	// Disabled operators
@@ -166,6 +172,18 @@ bool depending_ptr<T>::operator>=(T *v)
 	return std::pointer_cmp_le_dep(this->dp_rep, v);
 }
 
+template<typename T>
+T* depending_ptr<T>::operator+(long idx)
+{
+	return this->dp_rep + idx;
+}
+
+template<typename T>
+T* depending_ptr<T>::operator-(long idx)
+{
+	return this->dp_rep - idx;
+}
+
 #include <iostream>
 
 int main(int argc, char **argv)
@@ -204,6 +222,14 @@ int main(int argc, char **argv)
 	std::cout << (p == nullptr);
 	std::cout << " Again but equal: ";
 	std::cout << (p == p);
+	std::cout << "\nInfix + 1: ";
+	std::cout << p + 1;
+	std::cout << " * ";
+	std::cout << *(p + 1);
+	std::cout << "\nInfix - 1: ";
+	std::cout << p - 1;
+	std::cout << " * ";
+	std::cout << *(p - 1);
 
 	std::cout << "\n";
 	return 0;
