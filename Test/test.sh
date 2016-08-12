@@ -32,3 +32,7 @@ g++ -std=c++11 -g -o depending_ptr_condcomp depending_ptr_condcomp.cpp -lpthread
 echo depending_ptr_condcomp FOO
 g++ -std=c++11 -g -DFOO -o depending_ptr_condcomp depending_ptr_condcomp.cpp -lpthread &&
 	./depending_ptr_condcomp
+
+echo depending_ptr_handoff
+g++ -std=c++11 -g -o depending_ptr_handoff depending_ptr_handoff.cpp -lpthread &&
+	./depending_ptr_handoff

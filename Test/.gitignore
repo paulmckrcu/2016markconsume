@@ -8,3 +8,4 @@ depending_ptr_fanout
 depending_ptr_fanin
 depending_ptr_faninout
 depending_ptr_condcomp
+depending_ptr_handoff
