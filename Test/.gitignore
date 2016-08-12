@@ -1,2 +1,3 @@
 *.o
 test_depending_ptr
+depending_ptr_simple
