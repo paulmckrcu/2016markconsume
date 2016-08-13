@@ -81,7 +81,6 @@ depending_ptr<T>::depending_ptr(T *v)
 template<typename T>
 depending_ptr<T>::depending_ptr()
 {
-	this->dp_rep = nullptr;
 }
 
 
