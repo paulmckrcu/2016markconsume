@@ -5,10 +5,14 @@ template to which a pointer-like type is passed.
 This approach allows implementers considerable freedom, as they can
 hook into the \co{->} and \co{*} if need be, and also use the C++
 \co{delete} keyword to prohibit problematic operations.
+Implementations that might nevertheless carry out aggressive
+optimizations that might break dependencies even for the non-problematic
+operations might need to implement this template class in a manner
+similar to the atomics template classes.
 
 This approach would need to be augmented with a non-template solution
 for C, for example, the object-modifier approach from
-the previous section.
+Section~\ref{sec:Object Modifier}.
 
 \begin{figure}[tbp]
 { \scriptsize
@@ -479,7 +483,7 @@ dependency-bearing pointers have been deleted.\footnote{
 
 Figures~\ref{fig:Template: Simple Case}--\ref{fig:Template: Handoff to Locking}
 show how templates can be applied to each of the examples
-introduced in Section~\ref{fig:Common Definitions}.
+introduced in Section~\ref{sec:Representative Use Cases}.
 As with the object-modifier approach in
 Section~\ref{sec:Object Modifier},
 these changes are straightforward markings of local variables, function
