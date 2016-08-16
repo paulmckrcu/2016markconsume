@@ -77,7 +77,12 @@ Note especially that the relational operators are defined in terms of
 \co{pointer_cmp_le_dep()},
 so that as long as the first argument to a relational operator is of type
 \co{class depending_ptr<T>},
-pointers may be safely compared without risk of breaking dependency chains.
+pointers may be safely compared without risk of breaking dependency
+chains.\footnote{
+	That said, in the prototype implementation,
+	these are not intrinsics, but rather separately compiled functions.
+	In the absence of link-time optimizations, separate compilation
+	preserves dependency chains in most implementations.}
 In addition, the operators that cannot be safely applied to
 dependency-bearing pointers have been deleted.\footnote{
 	The number of pointer-tagging algorithms should motivate
@@ -479,3 +484,7 @@ As with the object-modifier approach in
 Section~\ref{sec:Object Modifier},
 these changes are straightforward markings of local variables, function
 parameters, and return-value types.
+
+Full source code for a prototype implementation
+(and for this paper) may be downloaded from
+{\small \co{https://github.com/paulmckrcu/2016markconsume.git}}.
