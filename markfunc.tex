@@ -3,3 +3,12 @@ an attribute (for example, something like
 \co{[[function_carries_dependencies]]}) or
 a keyword (for example, something like
 \co{_FunctionCarriesDependencies}).
+
+Proper use of this approach eliminates issues with dependencies passing
+through dependency-unaware code.
+However, although there are many software-engineering reasons for
+preferring small functions, the fact remains that large functions
+are not uncommon in production code.
+Large marked functions of course result in similar dependency-chain-tracing
+complexity as would unmarked code, so any full proposal for this approach
+should describe how this tracing will be handled.

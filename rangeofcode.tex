@@ -1,5 +1,8 @@
 Ranges of code could be marked by pragmas, through use of C preprocessor
 symbols, or via other ad-hoc means.
 However, again, software-engineering considerations would likely cause
-many such projects to mark all the translation units.
-This approach will therefore be left out of the remainder of this document.
+many such projects to mark all the translation units, which would of course
+result in the same dependency-chain-tracing complexity as would unmarked
+dependency chains.
+Any full proposal for this approach should therefore describe how this
+issue will be handled.

@@ -9,5 +9,8 @@ be linked with unmarked translation units.
 This approach could be useful in cases where only a few of the translation
 units contain dependency chains.
 However, software-engineering considerations would likely cause many such
-projects to mark all the translation units.
-This approach will therefore be left out of the remainder of this document.
+projects to mark all the translation units, which would of course result
+in the same dependency-chain-tracing complexity as would unmarked
+dependency chains.
+Any full proposal for this approach should therefore describe how this
+issue will be handled.
