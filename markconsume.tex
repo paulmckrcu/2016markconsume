@@ -896,7 +896,17 @@ The best possible method would have a row of all blank cells.
 \section{Summary}
 \label{sec:Summary}
 
-@@@
+This paper reviewed the 2016 discussions of \co{memory_order_consume}
+that took place at the Jacksonville meeting, presented several representative
+use cases, listed evaluation criteria, presented a number of
+marking proposals (two in depth), and provided a comparative
+evaluation.
+
+A combination of typed object modifier (for C compatibility) and
+a template class (for C++), similar to the approach used by atomics.
+For standalone applications, these should be further combined with an
+unmarked option, where the implementation assumes that everything that
+could legally marked is so marked.
 
 %\input{acknowledgments}
 %\input{legal}
