@@ -698,6 +698,7 @@ no effect on code generation.
 \item	Support for cross-function dependency chains.
 \item	Support for cross-compilation-unit dependency chains.
 \item	Compatibility with C.
+\item	Formal Verification Compatibility.
 \end{enumerate}
 
 \section{Marking Proposals}
@@ -768,7 +769,129 @@ operations carried out on a given marked object.
 \section{Evaluation}
 \label{sec:Evaluation}
 
-@@@
+\begin{table}
+\small
+\centering
+\begin{tabular}{l|c|c|c|c|c|c|c}
+Mark:
+	~ ~ ~ ~ ~ ~ ~ ~ ~
+	& \begin{picture}(6,185)(0,0)
+		\rotatebox{90}{Ease of Compilation}
+	  \end{picture}
+	& \begin{picture}(6,185)(0,0)
+		\rotatebox{90}{Ease of Modification}
+	  \end{picture}
+	& \begin{picture}(6,185)(0,0)
+		\rotatebox{90}{Precise Dependency Chains}
+	  \end{picture}
+	& \begin{picture}(6,185)(0,0)
+		\rotatebox{90}{Cross-Function Dependency Chains}
+	  \end{picture}
+	& \begin{picture}(6,185)(0,0)
+		\rotatebox{90}{Cross-Compilation-Unit Dependency Chains}
+	  \end{picture}
+	& \begin{picture}(6,185)(0,0)
+		\rotatebox{90}{C Compatibility}
+	  \end{picture}
+	& \begin{picture}(6,185)(0,0)
+		\rotatebox{90}{Formal Verification}
+	  \end{picture}
+	\\
+	\hline
+%	 EC  EM  PD    CF  CC  CC  FV
+\hline
+Translation Unit
+	& T &   & N   &   & m &   &  N \\
+\hline
+Range of Code
+	& t &   & N   & m & m &   &  N \\
+\hline
+Functions
+	& t &   & N   & m & m &   &  N \\
+\hline
+Objects
+	&   &   &     &   &   &   &    \\
+\hline
+~~~~Attribute
+	&   & o &     & t & t & a &    \\
+\hline
+~~~~Type Qualifier
+	&   & o &     &   &   &   &  N \\
+\hline
+~~~~Modifier
+	&   & o &     & t & t &   &    \\
+\hline
+~~~~Template
+	&   & o &     &   &   & N &    \\
+\hline
+~~~~Template+Modifier
+	&   & o &     &   &   &   &    \\
+\hline
+Root/Leaf
+	&   & A &     & ? & ? & ? &  ? \\
+\hline
+Nothing
+	&   &   & N   &   &   &   &  N \\
+\end{tabular}
+\caption{Dependency-Chain Marking Evaluation}
+\label{tab:Dependency-Chain Marking Evaluation}
+\end{table}
+
+Table~\ref{tab:Dependency-Chain Marking Evaluation}
+provides a rough comparison between the various marking methods, and
+also includes the unmarked option for comparison purposes.
+
+For ease of compilation, the cells corresponding to methods that
+explicitly mark dependency chains or that don't require marking at all
+are left blank.
+Those that require tracing dependency chains throughout the full
+translation unit are marked ``T'' and those that limit the code in
+which tracing is required are marked ``t''.
+
+For ease of modification, the cells corresponding to methods that
+either require no marking or that mark large-scale entities are
+left blank.
+Those that require marking the definitions of objects that carry
+dependencies are marked ``o'', and those require marking of individual
+accesses are marked ``A''.
+
+Cells corresonding to those methods that precisely mark dependency chains are 
+left blank, otherwise, they are marked ``N''.
+
+For cross-function dependency chains, those methods that either support
+cross-function marking or that do not require such marking are left blank.
+Those that require manual consistency checks are marked ``m'', those
+that are amenable to consistency-check tooling are marked ``t'', and
+those that are not fleshed out sufficiently to tell are marked ``?''.
+These same markings are used for cross-compilation-unit dependency
+chains.
+
+Cells corresponding to those methods supporting C compatibility are left
+blank.
+Those that would support C compatibility if C were to provide attributes
+are marked ``a''.
+Those that do not support C compatibility (at least not unless combined
+with some other method) are marked ``N'',
+and those that are not fleshed out sufficiently to tell are marked ``?''.
+
+Cells corresponding to methods believed to support formal verification
+are left blank, those that are believed not to support formal verification
+are marked ``N'',
+and those that are not fleshed out sufficiently to tell are marked ``?''.
+Note that the object type qualifier could in theory support formal
+verification, but the specific proposal rules this out by requiring that
+the compiler treat \co{memory_order_consume} loads as potentially
+returning any value from the type.
+
+Following the lead of C11 and C++11 atomics, the ``Template+Modifier''
+row covers the combination of
+marking objects with template classes (for C++) and with an
+typed object modifier (for C), a combination that appears to be quite
+attractive.
+This should be further combined with a totally unmarked option for
+use by standalone projects such as the Linux kernel.
+
+The best possible method would have a row of all blank cells.
 
 \section{Summary}
 \label{sec:Summary}
