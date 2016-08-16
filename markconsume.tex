@@ -91,6 +91,8 @@ at the Jacksonville meeting resulted in a few of items of agreement:
 
 \begin{enumerate}
 \item	Dependency chains should be restricted to pointers.
+	Please note that this excludes not only the troublesome objects
+	of integral type, but also accesses to static members of classes.
 \item	Unmarked code can be handled by having the implementation
 	behave as if markings had been supplied in all locations that
 	could reasonably be marked.
