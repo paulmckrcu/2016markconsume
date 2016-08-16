@@ -128,6 +128,10 @@ These points result in three known valid ways of handling
 	Note that pointer comparisons will still break dependency chains
 	in some cases, unless the comparisons were carried out using
 	proposed dependency-preserving pointer-comparison intrinsics.
+	Note further that the template-based method described in
+	Section~\ref{sec:Template}
+	uses operator overloading so that the usual relational
+	operators invoke these intrinsics.
 \end{enumerate}
 
 However, a number of ways of marking dependency chains have been
