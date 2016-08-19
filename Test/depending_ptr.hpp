@@ -2,23 +2,23 @@
 #include <atomic>
 
 namespace std {
-	bool pointer_cmp_eq_dep(void *p, void *q);
-	bool pointer_cmp_ne_dep(void *p, void *q);
-	bool pointer_cmp_gt_dep(void *p, void *q);
-	bool pointer_cmp_ge_dep(void *p, void *q);
-	bool pointer_cmp_lt_dep(void *p, void *q);
-	bool pointer_cmp_le_dep(void *p, void *q);
+	bool pointer_cmp_eq_dep(void *p, void *q) noexcept;
+	bool pointer_cmp_ne_dep(void *p, void *q) noexcept;
+	bool pointer_cmp_gt_dep(void *p, void *q) noexcept;
+	bool pointer_cmp_ge_dep(void *p, void *q) noexcept;
+	bool pointer_cmp_lt_dep(void *p, void *q) noexcept;
+	bool pointer_cmp_le_dep(void *p, void *q) noexcept;
 }
 
 template<typename T>
 class depending_ptr {
 public:
 	// Constructors
-	depending_ptr(T *v);
-	depending_ptr();
+	depending_ptr(T *v) noexcept;
+	depending_ptr() noexcept;
 
 	// Unary operators
-	bool operator!(); // Prefix logical-not (is-NULL) operator
+	bool operator!() noexcept; // Prefix logical-not (is-NULL) operator
 	class depending_ptr<T>* operator&(); // Prefix address-of operator
 	// No prefix bitwise complement operator (private)
 	T operator*(); // Prefix indirection operator
@@ -31,12 +31,12 @@ public:
 	T operator[](long int);
 
 	// Binary relational operators
-	bool operator==(T *v);
-	bool operator!=(T *v);
-	bool operator>(T *v);
-	bool operator>=(T *v);
-	bool operator<(T *v);
-	bool operator<=(T *v);
+	bool operator==(T *v) noexcept;
+	bool operator!=(T *v) noexcept;
+	bool operator>(T *v) noexcept;
+	bool operator>=(T *v) noexcept;
+	bool operator<(T *v) noexcept;
+	bool operator<=(T *v) noexcept;
 
 	// Other binary operators
 	class depending_ptr<T> operator+(long idx);
@@ -73,13 +73,13 @@ private:
 // Constructors
 
 template<typename T>
-depending_ptr<T>::depending_ptr(T *v)
+depending_ptr<T>::depending_ptr(T *v) noexcept
 {
 	this->dp_rep = v;
 }
 
 template<typename T>
-depending_ptr<T>::depending_ptr()
+depending_ptr<T>::depending_ptr() noexcept
 {
 }
 
@@ -87,7 +87,7 @@ depending_ptr<T>::depending_ptr()
 // Unary operators
 
 template<typename T>
-bool depending_ptr<T>::operator!() // Prefix logical-not (is-NULL) operator
+bool depending_ptr<T>::operator!() noexcept
 {
 	return !this->dp_rep;
 }
@@ -158,37 +158,37 @@ T depending_ptr<T>::operator[](long int idx)
 // Binary relational operators
 
 template<typename T>
-bool depending_ptr<T>::operator==(T *v)
+bool depending_ptr<T>::operator==(T *v) noexcept
 {
 	return std::pointer_cmp_eq_dep(this->dp_rep, v);
 }
 
 template<typename T>
-bool depending_ptr<T>::operator!=(T *v)
+bool depending_ptr<T>::operator!=(T *v) noexcept
 {
 	return std::pointer_cmp_ne_dep(this->dp_rep, v);
 }
 
 template<typename T>
-bool depending_ptr<T>::operator<(T *v)
+bool depending_ptr<T>::operator<(T *v) noexcept
 {
 	return std::pointer_cmp_gt_dep(this->dp_rep, v);
 }
 
 template<typename T>
-bool depending_ptr<T>::operator<=(T *v)
+bool depending_ptr<T>::operator<=(T *v) noexcept
 {
 	return std::pointer_cmp_ge_dep(this->dp_rep, v);
 }
 
 template<typename T>
-bool depending_ptr<T>::operator>(T *v)
+bool depending_ptr<T>::operator>(T *v) noexcept
 {
 	return std::pointer_cmp_lt_dep(this->dp_rep, v);
 }
 
 template<typename T>
-bool depending_ptr<T>::operator>=(T *v)
+bool depending_ptr<T>::operator>=(T *v) noexcept
 {
 	return std::pointer_cmp_le_dep(this->dp_rep, v);
 }

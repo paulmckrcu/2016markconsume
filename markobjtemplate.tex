@@ -23,9 +23,9 @@ that used for atomics.
 \begin{verbatim}
  1 template<typename T> class depending_ptr {
  2 public:
- 3   depending_ptr(T *v);
- 4   depending_ptr();
- 5   bool operator!();
+ 3   depending_ptr(T *v) noexcept;
+ 4   depending_ptr() noexcept;
+ 5   bool operator!() noexcept;
  6   class depending_ptr<T>* operator&();
  7   T operator*();
  8   T *operator->();
@@ -35,12 +35,12 @@ that used for atomics.
 12   class depending_ptr<T> operator--(int);
 13   operator T*();
 14   T operator[](long int);
-15   bool operator==(T *v);
-16   bool operator!=(T *v);
-17   bool operator>(T *v);
-18   bool operator>=(T *v);
-19   bool operator<(T *v);
-20   bool operator<=(T *v);
+15   bool operator==(T *v) noexcept;
+16   bool operator!=(T *v) noexcept;
+17   bool operator>(T *v) noexcept;
+18   bool operator>=(T *v) noexcept;
+19   bool operator<(T *v) noexcept;
+20   bool operator<=(T *v) noexcept;
 21   class depending_ptr<T> operator+(long idx);
 22   class depending_ptr<T> operator+=(long idx);
 23   class depending_ptr<T> operator-(long idx);
@@ -73,16 +73,33 @@ that used for atomics.
 \label{fig:Template: Declaration}
 \end{figure}
 
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1   bool pointer_cmp_eq_dep(void *p, void *q) noexcept;
+ 2   bool pointer_cmp_ne_dep(void *p, void *q) noexcept;
+ 3   bool pointer_cmp_gt_dep(void *p, void *q) noexcept;
+ 4   bool pointer_cmp_ge_dep(void *p, void *q) noexcept;
+ 5   bool pointer_cmp_lt_dep(void *p, void *q) noexcept;
+ 6   bool pointer_cmp_le_dep(void *p, void *q) noexcept;
+\end{verbatim}
+}
+\caption{Dependency-Preserving Comparisons}
+\label{fig:Dependency-Preserving Comparisons}
+\end{figure}
+
 Figure~\ref{fig:Template: Declaration}
 shows the resulting template declaration, each member function of which
 has a straightforward definition.
-Note especially that the relational operators are defined in terms of
+Note especially that the relational operators are defined in terms of the
 \co{pointer_cmp_eq_dep()},
 \co{pointer_cmp_ne_dep()},
 \co{pointer_cmp_gt_dep()},
 \co{pointer_cmp_ge_dep()},
 \co{pointer_cmp_lt_dep()}, and
-\co{pointer_cmp_le_dep()},
+\co{pointer_cmp_le_dep()}
+functions shown in
+Figure~\ref{@@@},
 so that as long as the first argument to a relational operator is of type
 \co{class depending_ptr<T>},
 pointers may be safely compared without risk of breaking dependency
