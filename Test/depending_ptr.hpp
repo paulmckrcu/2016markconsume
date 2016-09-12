@@ -35,7 +35,7 @@ public:
 	void swap(depending_ptr& d) noexcept;
 
 	// Unary operators
-	bool operator!() noexcept; // Prefix logical-not (is-nullptr) operator
+	// No operator!
 	// No prefix bitwise complement operator
 	element_type operator*(); // Prefix indirection operator
 	pointer operator->();
@@ -43,10 +43,17 @@ public:
 	depending_ptr<element_type> operator++(int); // Postfix increment operator
 	depending_ptr<element_type> operator--(); // Prefix decrement operator
 	depending_ptr<element_type> operator--(int); // Postfix decrement operator
-	operator pointer();
+	pointer get() const noexcept;
+	explicit operator bool();
 	element_type operator[](size_t);
 
 	// Binary relational operators
+	bool operator==(depending_ptr v) noexcept;
+	bool operator!=(depending_ptr v) noexcept;
+	bool operator>(depending_ptr v) noexcept;
+	bool operator>=(depending_ptr v) noexcept;
+	bool operator<(depending_ptr v) noexcept;
+	bool operator<=(depending_ptr v) noexcept;
 	bool operator==(pointer v) noexcept;
 	bool operator!=(pointer v) noexcept;
 	bool operator>(pointer v) noexcept;
@@ -55,36 +62,18 @@ public:
 	bool operator<=(pointer v) noexcept;
 
 	// Other binary operators
-	depending_ptr<T> operator+(long idx);
-	depending_ptr<T> operator+=(long idx);
-	depending_ptr<T> operator-(long idx);
-	depending_ptr<T> operator-=(long idx);
-
-	// Disabled operators.  Yes, they could work around with double...
-	int operator~() = delete;
-	int operator+() = delete;
-	int operator-() = delete;
-	int operator&(long int) = delete;
-	int operator&=(long int) = delete;
-	int operator%(long int) = delete;
-	int operator%=(long int) = delete;
-	int operator*(long int) = delete;
-	int operator*=(long int) = delete;
-	int operator/(long int) = delete;
-	int operator/=(long int) = delete;
-	int operator<<(long int) = delete;
-	int operator<<=(long int) = delete;
-	int operator>>(long int) = delete;
-	int operator>>=(long int) = delete;
-	int operator^(long int) = delete;
-	int operator^=(long int) = delete;
-	int operator|(long int) = delete;
-	int operator|=(long int) = delete;
+	depending_ptr<T> operator+(size_t idx);
+	depending_ptr<T> operator+=(size_t idx);
+	depending_ptr<T> operator-(size_t idx);
+	depending_ptr<T> operator-=(size_t idx);
 
 private:
 	pointer dp_rep;
 };
 
+// Free functions
+
+template<class E, class T, class Y> basic_ostream<E, T>& operator<<(basic_ostream<E, T>& os, depending_ptr<Y> const& p) { return os << p.get(); }
 
 // Constructors
 
@@ -104,7 +93,6 @@ template<typename T> depending_ptr<T>& depending_ptr<T>::operator=(nullptr_t) no
 template<typename T> void depending_ptr<T>::swap(depending_ptr<T>& d) noexcept { pointer p = d.dp_rep; d.dp_rep = dp_rep; dp_rep = p; }
 
 // Unary operators
-template<typename T> bool depending_ptr<T>::operator!() noexcept { return !dp_rep; }
 template<typename T> T depending_ptr<T>::operator*() { return *dp_rep; }
 template<typename T> typename depending_ptr<T>::pointer depending_ptr<T>::operator->() { return dp_rep; }
 template<typename T> depending_ptr<T> depending_ptr<T>::operator++() { ++dp_rep; return *this; }
@@ -121,50 +109,28 @@ template<typename T> depending_ptr<T> depending_ptr<T>::operator--(int)
 	--dp_rep;
 	return temp;
 }
-template<typename T> depending_ptr<T>::operator pointer() { return dp_rep; }
+template<typename T> typename depending_ptr<T>::pointer depending_ptr<T>::get() const noexcept { return dp_rep; }
+template<typename T> depending_ptr<T>::operator bool() { return dp_rep; }
 template<typename T> T depending_ptr<T>::operator[](size_t idx) { return dp_rep[idx]; }
 
 
 // Binary relational operators
 
-template<typename T>
-bool depending_ptr<T>::operator==(pointer v) noexcept
-{
-	return std::pointer_cmp_eq_dep(dp_rep, v);
-}
+template<typename T> bool depending_ptr<T>::operator==(depending_ptr v) noexcept { return std::pointer_cmp_eq_dep(dp_rep, v.dp_rep); }
+template<typename T> bool depending_ptr<T>::operator!=(depending_ptr v) noexcept { return std::pointer_cmp_ne_dep(dp_rep, v.dp_rep); }
+template<typename T> bool depending_ptr<T>::operator<(depending_ptr v) noexcept { return std::pointer_cmp_gt_dep(dp_rep, v.dp_rep); }
+template<typename T> bool depending_ptr<T>::operator<=(depending_ptr v) noexcept { return std::pointer_cmp_ge_dep(dp_rep, v.dp_rep); }
+template<typename T> bool depending_ptr<T>::operator>(depending_ptr v) noexcept { return std::pointer_cmp_lt_dep(dp_rep, v.dp_rep); }
+template<typename T> bool depending_ptr<T>::operator>=(depending_ptr v) noexcept { return std::pointer_cmp_le_dep(dp_rep, v.dp_rep); }
+template<typename T> bool depending_ptr<T>::operator==(pointer v) noexcept { return std::pointer_cmp_eq_dep(dp_rep, v); }
+template<typename T> bool depending_ptr<T>::operator!=(pointer v) noexcept { return std::pointer_cmp_ne_dep(dp_rep, v); }
+template<typename T> bool depending_ptr<T>::operator<(pointer v) noexcept { return std::pointer_cmp_gt_dep(dp_rep, v); }
+template<typename T> bool depending_ptr<T>::operator<=(pointer v) noexcept { return std::pointer_cmp_ge_dep(dp_rep, v); }
+template<typename T> bool depending_ptr<T>::operator>(pointer v) noexcept { return std::pointer_cmp_lt_dep(dp_rep, v); }
+template<typename T> bool depending_ptr<T>::operator>=(pointer v) noexcept { return std::pointer_cmp_le_dep(dp_rep, v); }
 
 template<typename T>
-bool depending_ptr<T>::operator!=(pointer v) noexcept
-{
-	return std::pointer_cmp_ne_dep(dp_rep, v);
-}
-
-template<typename T>
-bool depending_ptr<T>::operator<(pointer v) noexcept
-{
-	return std::pointer_cmp_gt_dep(dp_rep, v);
-}
-
-template<typename T>
-bool depending_ptr<T>::operator<=(pointer v) noexcept
-{
-	return std::pointer_cmp_ge_dep(dp_rep, v);
-}
-
-template<typename T>
-bool depending_ptr<T>::operator>(pointer v) noexcept
-{
-	return std::pointer_cmp_lt_dep(dp_rep, v);
-}
-
-template<typename T>
-bool depending_ptr<T>::operator>=(pointer v) noexcept
-{
-	return std::pointer_cmp_le_dep(dp_rep, v);
-}
-
-template<typename T>
-depending_ptr<T> depending_ptr<T>::operator+(long idx)
+depending_ptr<T> depending_ptr<T>::operator+(size_t idx)
 {
 	depending_ptr<T> temp(dp_rep + idx);
 
@@ -172,14 +138,14 @@ depending_ptr<T> depending_ptr<T>::operator+(long idx)
 }
 
 template<typename T>
-depending_ptr<T> depending_ptr<T>::operator+=(long idx)
+depending_ptr<T> depending_ptr<T>::operator+=(size_t idx)
 {
 	dp_rep += idx;
 	return *this;
 }
 
 template<typename T>
-depending_ptr<T> depending_ptr<T>::operator-(long idx)
+depending_ptr<T> depending_ptr<T>::operator-(size_t idx)
 {
 	depending_ptr<T> temp(dp_rep - idx);
 
@@ -187,7 +153,7 @@ depending_ptr<T> depending_ptr<T>::operator-(long idx)
 }
 
 template<typename T>
-depending_ptr<T> depending_ptr<T>::operator-=(long idx)
+depending_ptr<T> depending_ptr<T>::operator-=(size_t idx)
 {
 	dp_rep -= idx;
 	return *this;

@@ -14,29 +14,29 @@ int main(int argc, char **argv)
 	std::cout << "Initialized value: ";
 	std::cout << *p;
 	std::cout << "\nPostfix ++: ";
-	std::cout << p++;
+	std::cout << (p++);
 	std::cout << " result: ";
 	std::cout << *p;
 
 	std::cout << "\nPrefix ++: ";
-	std::cout << ++p;
+	std::cout << (++p);
 	std::cout << " result: ";
 	std::cout << *p;
 
 	std::cout << "\nPostfix --: ";
-	std::cout << p--;
+	std::cout << (p--);
 	std::cout << " result: ";
 	std::cout << *p;
 
 	std::cout << "\nPrefix --: ";
-	std::cout << --p;
+	std::cout << (--p);
 	std::cout << " result: ";
 	std::cout << *p;
 
 	std::cout << "\nPrefix &: ";
 	std::cout << &p;
 	std::cout << "\nPrefix *&: ";
-	std::cout << *&p;
+	std::cout << (*&p);
 	std::cout << "\nPrefix **&: ";
 	std::cout << **&p;
 	std::cout << "\nPrefix !: ";
@@ -54,11 +54,11 @@ int main(int argc, char **argv)
 	std::cout << " Again but equal: ";
 	std::cout << (p == p);
 	std::cout << "\nInfix + 1: ";
-	std::cout << p + 1;
+	std::cout << (p + 1);
 	std::cout << " * ";
 	std::cout << *(p + 1);
 	std::cout << "\nInfix - 1: ";
-	std::cout << p - 1;
+	std::cout << (p - 1);
 	std::cout << " * ";
 	std::cout << *(p - 1);
 
