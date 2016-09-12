@@ -8,7 +8,7 @@ static __inline__ void spin_lock_init(spinlock_t *sp)
 	int ret;
 
 retry:
-	ret = pthread_mutex_init(sp, NULL);
+	ret = pthread_mutex_init(sp, nullptr);
 	if (ret) {
 		if (ret == EINTR)
 			goto retry;
@@ -42,11 +42,11 @@ struct rcutest {
 
 struct rcutest1 {
 	int a;
-	struct rcutest rt;
+	rcutest rt;
 };
 
 std::atomic<rcutest *> gp;
 std::atomic<rcutest1 *> g1p;
 std::atomic<int *> gip;
-struct rcutest *gslp; /* Global scope, local usage. */
+rcutest *gslp; /* Global scope, local usage. */
 std::atomic<rcutest *> gsgp;
