@@ -10,39 +10,52 @@ namespace std {
 	bool pointer_cmp_le_dep(void *p, void *q) noexcept;
 }
 
+using namespace std;
+
 template<typename T>
 class depending_ptr {
 public:
+	typedef T* pointer;
+	typedef T element_type;
+
 	// Constructors
-	depending_ptr(T *v) noexcept;
-	depending_ptr() noexcept;
+	constexpr depending_ptr() noexcept;
+	explicit depending_ptr(pointer v) noexcept;
+	depending_ptr(nullptr_t) noexcept;
+	depending_ptr(depending_ptr &&d) noexcept;
+
+	// Assignment
+	depending_ptr& operator=(depending_ptr&& d) noexcept;
+	depending_ptr& operator=(nullptr_t) noexcept;
+
+	// Modifiers
+	void swap(depending_ptr& d) noexcept;
 
 	// Unary operators
-	bool operator!() noexcept; // Prefix logical-not (is-NULL) operator
-	class depending_ptr<T>* operator&(); // Prefix address-of operator
-	// No prefix bitwise complement operator (private)
-	T operator*(); // Prefix indirection operator
-	T *operator->();
-	class depending_ptr<T> operator++(); // Prefix increment operator
-	class depending_ptr<T> operator++(int); // Postfix increment operator
-	class depending_ptr<T> operator--(); // Prefix decrement operator
-	class depending_ptr<T> operator--(int); // Postfix decrement operator
-	operator T*();
-	T operator[](long int);
+	bool operator!() noexcept; // Prefix logical-not (is-nullptr) operator
+	// No prefix bitwise complement operator
+	element_type operator*(); // Prefix indirection operator
+	pointer operator->();
+	depending_ptr<element_type> operator++(); // Prefix increment operator
+	depending_ptr<element_type> operator++(int); // Postfix increment operator
+	depending_ptr<element_type> operator--(); // Prefix decrement operator
+	depending_ptr<element_type> operator--(int); // Postfix decrement operator
+	operator pointer();
+	element_type operator[](size_t);
 
 	// Binary relational operators
-	bool operator==(T *v) noexcept;
-	bool operator!=(T *v) noexcept;
-	bool operator>(T *v) noexcept;
-	bool operator>=(T *v) noexcept;
-	bool operator<(T *v) noexcept;
-	bool operator<=(T *v) noexcept;
+	bool operator==(pointer v) noexcept;
+	bool operator!=(pointer v) noexcept;
+	bool operator>(pointer v) noexcept;
+	bool operator>=(pointer v) noexcept;
+	bool operator<(pointer v) noexcept;
+	bool operator<=(pointer v) noexcept;
 
 	// Other binary operators
-	class depending_ptr<T> operator+(long idx);
-	class depending_ptr<T> operator+=(long idx);
-	class depending_ptr<T> operator-(long idx);
-	class depending_ptr<T> operator-=(long idx);
+	depending_ptr<T> operator+(long idx);
+	depending_ptr<T> operator+=(long idx);
+	depending_ptr<T> operator-(long idx);
+	depending_ptr<T> operator-=(long idx);
 
 	// Disabled operators.  Yes, they could work around with double...
 	int operator~() = delete;
@@ -66,197 +79,148 @@ public:
 	int operator|=(long int) = delete;
 
 private:
-	T *dp_rep;
+	pointer dp_rep;
 };
 
 
 // Constructors
 
-template<typename T>
-depending_ptr<T>::depending_ptr(T *v) noexcept
-{
-	this->dp_rep = v;
-}
+template<typename T> constexpr depending_ptr<T>::depending_ptr() noexcept : dp_rep(nullptr) {}
+template<typename T> depending_ptr<T>::depending_ptr(pointer v) noexcept : dp_rep(v) {}
+template<typename T> depending_ptr<T>::depending_ptr(nullptr_t) noexcept : depending_ptr() {}
+template<typename T> depending_ptr<T>::depending_ptr(depending_ptr &&d) noexcept : dp_rep(d.dp_rep) {}
 
-template<typename T>
-depending_ptr<T>::depending_ptr() noexcept
-{
-}
+// Assignment
+template<typename T> depending_ptr<T>& depending_ptr<T>::operator=(depending_ptr<T>&& d) noexcept { dp_rep = d.dp_rep; return *this; }
+template<typename T> depending_ptr<T>& depending_ptr<T>::operator=(nullptr_t) noexcept { dp_rep = nullptr; return *this; }
 
+// Modifiers
+template<typename T> void depending_ptr<T>::swap(depending_ptr<T>& d) noexcept { pointer p = d.dp_rep; d.dp_rep = dp_rep; dp_rep = p; }
 
 // Unary operators
-
-template<typename T>
-bool depending_ptr<T>::operator!() noexcept
+template<typename T> bool depending_ptr<T>::operator!() noexcept { return !dp_rep; }
+template<typename T> T depending_ptr<T>::operator*() { return *dp_rep; }
+template<typename T> typename depending_ptr<T>::pointer depending_ptr<T>::operator->() { return dp_rep; }
+template<typename T> depending_ptr<T> depending_ptr<T>::operator++() { ++dp_rep; return *this; }
+template<typename T> depending_ptr<T> depending_ptr<T>::operator++(int)
 {
-	return !this->dp_rep;
-}
-
-template<typename T>
-class depending_ptr<T>* depending_ptr<T>::operator&()
-{
-	return this;
-}
-
-template<typename T>
-T depending_ptr<T>::operator*() // Prefix indirection operator
-{
-	return *this->dp_rep;
-}
-
-template<typename T>
-T *depending_ptr<T>::operator->()
-{
-	return this->dp_rep;
-}
-
-template<typename T>
-class depending_ptr<T> depending_ptr<T>::operator++() // Prefix increment operator
-{
-	++this->dp_rep;
-	return *this;
-}
-
-template<typename T>
-class depending_ptr<T> depending_ptr<T>::operator++(int)
-{
-	class depending_ptr<T> temp(this->dp_rep);
-
-	++this->dp_rep;
+	depending_ptr<T> temp(dp_rep);
+	++dp_rep;
 	return temp;
 }
-
-template<typename T>
-class depending_ptr<T> depending_ptr<T>::operator--()
+template<typename T> depending_ptr<T> depending_ptr<T>::operator--() { --dp_rep; return *this; }
+template<typename T> depending_ptr<T> depending_ptr<T>::operator--(int)
 {
-	--this->dp_rep;
-	return *this;
-}
-
-template<typename T>
-class depending_ptr<T> depending_ptr<T>::operator--(int)
-{
-	class depending_ptr<T> temp(this->dp_rep);
-
-	--this->dp_rep;
+	depending_ptr<T> temp(dp_rep);
+	--dp_rep;
 	return temp;
 }
-
-template<typename T>
-depending_ptr<T>::operator T*() // Conversion to T* pointer
-{
-	return this->dp_rep;
-}
-
-template<typename T>
-T depending_ptr<T>::operator[](long int idx)
-{
-	return this->dp_rep[idx];
-}
+template<typename T> depending_ptr<T>::operator pointer() { return dp_rep; }
+template<typename T> T depending_ptr<T>::operator[](size_t idx) { return dp_rep[idx]; }
 
 
 // Binary relational operators
 
 template<typename T>
-bool depending_ptr<T>::operator==(T *v) noexcept
+bool depending_ptr<T>::operator==(pointer v) noexcept
 {
-	return std::pointer_cmp_eq_dep(this->dp_rep, v);
+	return std::pointer_cmp_eq_dep(dp_rep, v);
 }
 
 template<typename T>
-bool depending_ptr<T>::operator!=(T *v) noexcept
+bool depending_ptr<T>::operator!=(pointer v) noexcept
 {
-	return std::pointer_cmp_ne_dep(this->dp_rep, v);
+	return std::pointer_cmp_ne_dep(dp_rep, v);
 }
 
 template<typename T>
-bool depending_ptr<T>::operator<(T *v) noexcept
+bool depending_ptr<T>::operator<(pointer v) noexcept
 {
-	return std::pointer_cmp_gt_dep(this->dp_rep, v);
+	return std::pointer_cmp_gt_dep(dp_rep, v);
 }
 
 template<typename T>
-bool depending_ptr<T>::operator<=(T *v) noexcept
+bool depending_ptr<T>::operator<=(pointer v) noexcept
 {
-	return std::pointer_cmp_ge_dep(this->dp_rep, v);
+	return std::pointer_cmp_ge_dep(dp_rep, v);
 }
 
 template<typename T>
-bool depending_ptr<T>::operator>(T *v) noexcept
+bool depending_ptr<T>::operator>(pointer v) noexcept
 {
-	return std::pointer_cmp_lt_dep(this->dp_rep, v);
+	return std::pointer_cmp_lt_dep(dp_rep, v);
 }
 
 template<typename T>
-bool depending_ptr<T>::operator>=(T *v) noexcept
+bool depending_ptr<T>::operator>=(pointer v) noexcept
 {
-	return std::pointer_cmp_le_dep(this->dp_rep, v);
+	return std::pointer_cmp_le_dep(dp_rep, v);
 }
 
 template<typename T>
-class depending_ptr<T> depending_ptr<T>::operator+(long idx)
+depending_ptr<T> depending_ptr<T>::operator+(long idx)
 {
-	class depending_ptr<T> temp(this->dp_rep + idx);
+	depending_ptr<T> temp(dp_rep + idx);
 
 	return temp;
 }
 
 template<typename T>
-class depending_ptr<T> depending_ptr<T>::operator+=(long idx)
+depending_ptr<T> depending_ptr<T>::operator+=(long idx)
 {
-	this->dp_rep += idx;
+	dp_rep += idx;
 	return *this;
 }
 
 template<typename T>
-class depending_ptr<T> depending_ptr<T>::operator-(long idx)
+depending_ptr<T> depending_ptr<T>::operator-(long idx)
 {
-	class depending_ptr<T> temp(this->dp_rep - idx);
+	depending_ptr<T> temp(dp_rep - idx);
 
 	return temp;
 }
 
 template<typename T>
-class depending_ptr<T> depending_ptr<T>::operator-=(long idx)
+depending_ptr<T> depending_ptr<T>::operator-=(long idx)
 {
-	this->dp_rep -= idx;
+	dp_rep -= idx;
 	return *this;
 }
 
 // RCU functions for testing, not necessarily for standardization.
 
 template<typename T>
-class depending_ptr<T> rcu_consume(std::atomic<T*> *p)
+depending_ptr<T> rcu_consume(std::atomic<typename depending_ptr<T>::pointer> *p)
 {
-	volatile std::atomic<T*> *q = p;
+	volatile std::atomic<typename depending_ptr<T>::pointer> *q = p;
 	// Change to memory_order_consume once it is fixed
-	class depending_ptr<T> temp(q->load(std::memory_order_relaxed));
+	depending_ptr<T> temp(q->load(std::memory_order_relaxed));
 
 	return temp;
 }
 
 template<typename T>
-class depending_ptr<T> rcu_consume(T *p)
+depending_ptr<T> rcu_consume(typename depending_ptr<T>::pointer p)
 {
 	// Alternatively, could cast p to volatile atomic...
-	class depending_ptr<T> temp(*(T* volatile *)&p);
+	depending_ptr<T> temp(*(typename depending_ptr<T>::pointer volatile *)&p);
 
 	return temp;
 }
 
 template<typename T>
-T *rcu_store_release(std::atomic<T*> *p, T *v)
+typename depending_ptr<T>::pointer rcu_store_release(std::atomic<typename depending_ptr<T>::pointer> *p, typename depending_ptr<T>::pointer v)
 {
 	p->store(v, std::memory_order_release);
 	return v;
 }
 
 template<typename T>
-T *rcu_store_release(T **p, T *v)
+typename depending_ptr<T>::pointer rcu_store_release(typename depending_ptr<T>::pointer *p, typename depending_ptr<T>::pointer v)
 {
 	// Alternatively, could cast p to volatile atomic...
 	atomic_thread_fence(std::memory_order_release);
-	*((volatile T **)p) = v;
+	*((volatile typename depending_ptr<T>::pointer *)p) = v;
 	return v;
 }
 
