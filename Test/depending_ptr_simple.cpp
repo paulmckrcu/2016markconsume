@@ -8,49 +8,49 @@
 
 void *thread0(void *unused)
 {
-	struct rcutest *p;
+	rcutest *p;
 
-	p = (struct rcutest *)malloc(sizeof(*p));
+	p = new rcutest();
 	assert(p);
 	p->a = 42;
 	assert(p->a != 43);
 	rcu_store_release(&gp, p);
-	return NULL;
+	return nullptr;
 }
 
 void *thread1(void *unused)
 {
-	depending_ptr<struct rcutest> p;
+	depending_ptr<rcutest> p;
 
 	// std::this_thread::sleep_for(std::chrono::seconds(1));
 	p = rcu_consume(&gp);
 	if (p)
 		p->a = 43;
-	return NULL;
+	return nullptr;
 }
 
 int main(int argc, char **argv)
 {
 	pthread_t tid0;
 	pthread_t tid1;
-	struct rcutest *p;
+	rcutest *p;
 
-	if (pthread_create(&tid0, NULL, thread0, NULL)) {
+	if (pthread_create(&tid0, nullptr, thread0, nullptr)) {
 		perror("pthread_create(thread0)");
-		return(-1);
+		return -1;
 	}
-	if (pthread_create(&tid1, NULL, thread1, NULL)) {
+	if (pthread_create(&tid1, nullptr, thread1, nullptr)) {
 		perror("pthread_create(thread1)");
-		return(-1);
+		return -1;
 	}
 
-	if (pthread_join(tid0, NULL)) {
+	if (pthread_join(tid0, nullptr)) {
 		perror("pthread_join(tid0)");
-		return(-1);
+		return -1;
 	}
-	if (pthread_join(tid1, NULL)) {
+	if (pthread_join(tid1, nullptr)) {
 		perror("pthread_join(tid1)");
-		return(-1);
+		return -1;
 	}
 
 	p = gp.load();

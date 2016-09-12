@@ -74,28 +74,28 @@ int main(int argc, char **argv)
 
 	if (pthread_create(&tid0, nullptr, thread0, nullptr)) {
 		perror("pthread_create(thread0)");
-		return(-1);
+		return -1;
 	}
 	if (pthread_create(&tid1, nullptr, thread1, nullptr)) {
 		perror("pthread_create(thread1)");
-		return(-1);
+		return -1;
 	}
 	if (pthread_create(&tid2, nullptr, thread1, nullptr)) {
 		perror("pthread_create(thread2)");
-		return(-1);
+		return -1;
 	}
 
 	if (pthread_join(tid0, nullptr)) {
 		perror("pthread_join(tid0)");
-		return(-1);
+		return -1;
 	}
 	if (pthread_join(tid1, nullptr)) {
 		perror("pthread_join(tid1)");
-		return(-1);
+		return -1;
 	}
 	if (pthread_join(tid2, nullptr)) {
 		perror("pthread_join(tid2)");
-		return(-1);
+		return -1;
 	}
 
 	return 0;
