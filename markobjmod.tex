@@ -6,25 +6,20 @@ It need not necessarily interact with the type system.
 \begin{figure}[tbp]
 { \scriptsize
 \begin{verbatim}
- 1 void thread0(void)
+ 1 void thread0()
  2 {
- 3   struct rcutest *p;
- 4
- 5   p = (struct rcutest *)malloc(sizeof(*p));
- 6   assert(p);
+ 3   rcutest *p = new rcutest();
  7   p->a = 42;
  8   assert(p->a != 43);
  9   rcu_assign_pointer(gp, p);
 10 }
 11
-12 void thread1(void)
+12 void thread1()
 13 {
-14   struct rcutest _Carries_dependency *p;
-15
-16   p = rcu_dereference(gp);
-17   if (p)
-18     p->a = 43;
-19 }
+14   rcutest _Carries_dependency *p = rcu_dereference(gp);
+15   if (p)
+16     p->a = 43;
+17 }
 \end{verbatim}
 }
 \caption{Object Modifier: Simple Case}
@@ -34,30 +29,25 @@ It need not necessarily interact with the type system.
 \begin{figure}[tbp]
 { \scriptsize
 \begin{verbatim}
- 1 void thread0(void)
+ 1 void thread0()
  2 {
- 3   struct rcutest *p;
- 4
- 5   p = (struct rcutest *)malloc(sizeof(*p));
- 6   assert(p);
- 7   p->a = 42;
- 8   rcu_assign_pointer(gp, p);
- 9 }
-10
-11 void
-12 thread1_help(struct rcutest _Carries_dependency *q)
-13 {
-14   if (q)
-15     assert(q->a == 42);
-16 }
-17
-18 void thread1(void)
-19 {
-20   struct rcutest _Carries_dependency *p;
-21
-22   p = rcu_dereference(gp);
-23   thread1_help(p);
-24 }
+ 3   rcutest *p = new rcutest();
+ 4   p->a = 42;
+ 5   rcu_assign_pointer(gp, p);
+ 6 }
+ 7
+ 8 void
+ 9 thread1_help(rcutest _Carries_dependency *q)
+10 {
+11   if (q)
+12     assert(q->a == 42);
+13 }
+14
+15 void thread1()
+16 {
+17   rcutest _Carries_dependency *p = rcu_dereference(gp);
+18   thread1_help(p);
+19 }
 \end{verbatim}
 }
 \caption{Object Modifier: In via Function Parameter}
@@ -67,29 +57,24 @@ It need not necessarily interact with the type system.
 \begin{figure}[tbp]
 { \scriptsize
 \begin{verbatim}
- 1 void thread0(void)
+ 1 void thread0()
  2 {
- 3   struct rcutest *p;
- 4
- 5   p = (struct rcutest *)malloc(sizeof(*p));
- 6   assert(p);
- 7   p->a = 42;
- 8   rcu_assign_pointer(gp, p);
- 9 }
-10
-11 struct rcutest _Carries_dependency *thread1_help(void)
-12 {
-13   return rcu_dereference(gp);
-14 }
-15
-16 void thread1(void)
-17 {
-18   struct rcutest _Carries_dependency *p;
-19
-20   p = thread1_help();
-21   if (p)
-22     assert(p->a == 42);
-23 }
+ 3   rcutest *p = new rcutest();
+ 4   p->a = 42;
+ 5   rcu_assign_pointer(gp, p);
+ 6 }
+ 7
+ 8 rcutest _Carries_dependency *thread1_help()
+ 9 {
+10   return rcu_dereference(gp);
+11 }
+12
+13 void thread1()
+14 {
+15   rcutest _Carries_dependency *p = thread1_help();
+16   if (p)
+17     assert(p->a == 42);
+18 }
 \end{verbatim}
 }
 \caption{Object Modifier: Out via Function Return}
@@ -99,38 +84,32 @@ It need not necessarily interact with the type system.
 \begin{figure}[tbp]
 { \scriptsize
 \begin{verbatim}
- 1 void thread0(void)
+ 1 void thread0()
  2 {
- 3   struct rcutest *p;
- 4
- 5   p = (struct rcutest *)malloc(sizeof(*p));
- 6   assert(p);
- 7   p->a = 42;
- 8   rcu_assign_pointer(gp, p);
- 9
-10   p = (struct rcutest *)malloc(sizeof(*p));
-11   assert(p);
-12   p->a = 43;
-13   rcu_assign_pointer(gsgp, p);
-14 }
-15
-16 struct rcutest _Carries_dependency *
-17 thread1_help(struct rcutest _Carries_dependency *p)
-18 {
-19   if (p)
-20     assert(p->a == 42);
-21   return rcu_dereference(gsgp);
-22 }
-23
-24 void thread1(void)
-25 {
-26   struct rcutest _Carries_dependency *p;
-27
-28   p = rcu_dereference(gp);
-29   p = thread1_help(p);
-30   if (p)
-31     assert(p->a == 43);
-32 }
+ 3   rcutest *p = new rcutest();
+ 4   p->a = 42;
+ 5   rcu_assign_pointer(gp, p);
+ 6
+ 7   p = new rcutest();
+ 8   p->a = 43;
+ 9   rcu_assign_pointer(gsgp, p);
+10 }
+11
+12 rcutest _Carries_dependency *
+13 thread1_help(rcutest _Carries_dependency *p)
+14 {
+15   if (p)
+16     assert(p->a == 42);
+17   return rcu_dereference(gsgp);
+18 }
+19
+20 void thread1(void)
+21 {
+22   rcutest _Carries_dependency *p = rcu_dereference(gp);
+23   p = thread1_help(p);
+24   if (p)
+25     assert(p->a == 43);
+26 }
 \end{verbatim}
 }
 \caption{Object Modifier: In and Out, But Different Chains}
@@ -140,38 +119,33 @@ It need not necessarily interact with the type system.
 \begin{figure}[tbp]
 { \scriptsize
 \begin{verbatim}
- 1 void thread0(void)
+ 1 void thread0()
  2 {
- 3   struct rcutest *p;
- 4
- 5   p = (struct rcutest *)malloc(sizeof(*p));
- 6   assert(p);
- 7   p->a = 42;
- 8   rcu_assign_pointer(gp, p);
- 9 }
-10
-11 void
-12 thread1_help1(struct rcutest _Carries_dependency *q)
-13 {
-14   if (q)
-15     assert(q->a == 42);
-16 }
-17
-18 void
-19 thread1_help2(struct rcutest _Carries_dependency *q)
-20 {
-21   if (q)
-22     assert(q->a != 43);
-23 }
-24
-25 void thread1(void)
-26 {
-27   struct rcutest _Carries_dependency *p;
-28
-29   p = rcu_dereference(gp);
-30   thread1_help1(p);
-31   thread1_help2(p);
-32 }
+ 3   rcutest *p = new rcutest();
+ 4   p->a = 42;
+ 5   rcu_assign_pointer(gp, p);
+ 6 }
+ 7
+ 8 void
+ 9 thread1_help1(rcutest _Carries_dependency *q)
+10 {
+11   if (q)
+12     assert(q->a == 42);
+13 }
+14
+15 void
+16 thread1_help2(rcutest _Carries_dependency *q)
+17 {
+18   if (q)
+19     assert(q->a != 43);
+20 }
+21
+22 void thread1()
+23 {
+24   rcutest _Carries_dependency *p = rcu_dereference(gp);
+25   thread1_help1(p);
+26   thread1_help2(p);
+27 }
 \end{verbatim}
 }
 \caption{Object Modifier: Chain Fanning Out}
@@ -181,45 +155,35 @@ It need not necessarily interact with the type system.
 \begin{figure}[tbp]
 { \scriptsize
 \begin{verbatim}
- 1 void thread0(void)
+ 1 void thread0()
  2 {
- 3   struct rcutest *p;
- 4   struct rcutest1 *p1;
- 5
- 6   p = (struct rcutest *)malloc(sizeof(*p));
- 7   assert(p);
- 8   p->a = 42;
- 9   rcu_assign_pointer(gp, p);
-10
-11   p1 = (struct rcutest *)malloc(sizeof(*p1));
-12   assert(p1);
-13   p1->a = 41;
-14   p1->rt.a = 42;
-15   rcu_assign_pointer(g1p, p1);
-16 }
-17
-18 void
-19 thread1_help(struct rcutest _Carries_dependency *q)
+ 3   rcutest *p = new rcutest();
+ 4   p->a = 42;
+ 5   rcu_assign_pointer(gp, p);
+ 6   rcutest1 *p1 = new rcutest1();
+ 7   p1->a = 41;
+ 8   p1->rt.a = 42;
+ 9   rcu_assign_pointer(g1p, p1);
+10 }
+11
+12 void
+13 thread1_help(rcutest _Carries_dependency *q)
+14 {
+15   if (q)
+16     assert(q->a == 42);
+17 }
+18
+19 void thread1()
 20 {
-21   if (q)
-22     assert(q->a == 42);
+21   rcutest _Carries_dependency *p = rcu_dereference(gp);
+22   thread1_help(p);
 23 }
 24
-25 void thread1(void)
+25 void thread2()
 26 {
-27   struct rcutest _Carries_dependency *p;
-28
-29   p = rcu_dereference(gp);
-30   thread1_help(p);
-31 }
-32
-33 void thread2(void)
-34 {
-35   struct rcutest1 _Carries_dependency *p1;
-36
-37   p1 = rcu_dereference(g1p);
-38   thread1_help(&p1->rt);
-39 }
+27   rcutest1 _Carries_dependency *p1 = rcu_dereference(g1p);
+28   thread1_help(&p1->rt);
+29 }
 \end{verbatim}
 }
 \caption{Object Modifier: Chain Fanning In}
@@ -229,61 +193,51 @@ It need not necessarily interact with the type system.
 \begin{figure}[tbp]
 { \scriptsize
 \begin{verbatim}
- 1 void thread0(void)
+ 1 void thread0()
  2 {
- 3   struct rcutest *p;
- 4   struct rcutest1 *p1;
- 5
- 6   p = (struct rcutest *)malloc(sizeof(*p));
- 7   assert(p);
- 8   p->a = 42;
- 9   p->b = 43;
-10   rcu_assign_pointer(gp, p);
-11
-12   p1 = (struct rcutest *)malloc(sizeof(*p1));
-13   assert(p1);
-14   p1->a = 41;
-15   p1->rt.a = 42;
-16   p1->rt.b = 43;
-17   rcu_assign_pointer(g1p, p1);
+ 3   rcutest *p = new rcutest();
+ 4   p->a = 42;
+ 5   p->b = 43;
+ 6   rcu_assign_pointer(gp, p);
+ 7   rcutest1 *p1 = new rcutest1();
+ 8   p1->a = 41;
+ 9   p1->rt.a = 42;
+10   p1->rt.b = 43;
+11   rcu_assign_pointer(g1p, p1);
+12 }
+13
+14 void
+15 thread1a_help(rcutest _Carries_dependency *q)
+16 {
+17   assert(q->a == 42);
 18 }
 19
 20 void
-21 thread1a_help(struct rcutest _Carries_dependency *q)
+21 thread1b_help(rcutest _Carries_dependency *q)
 22 {
-23   assert(q->a == 42);
+23   assert(q->b == 43);
 24 }
 25
 26 void
-27 thread1b_help(struct rcutest _Carries_dependency *q)
+27 thread1_help(rcutest _Carries_dependency *q)
 28 {
-29   assert(q->b == 43);
-30 }
-31
-32 void
-33 thread1_help(struct rcutest _Carries_dependency *q)
-34 {
-35   if (q) {
-36     thread1a_help(q);
-37     thread1b_help(q);
-38   }
+29   if (q) {
+30     thread1a_help(q);
+31     thread1b_help(q);
+32   }
+33 }
+34
+35 void thread1()
+36 {
+37   rcutest _Carries_dependency *p = rcu_dereference(gp);
+38   thread1_help(p);
 39 }
 40
-41 void thread1(void)
+41 void thread2()
 42 {
-43   struct rcutest _Carries_dependency *p;
-44
-45   p = rcu_dereference(gp);
-46   thread1_help(p);
-47 }
-48
-49 void thread2(void)
-50 {
-51   struct rcutest1 _Carries_dependency *p1;
-52
-53   p1 = rcu_dereference(g1p);
-54   thread1_help(&p1->rt);
-55 }
+43   rcutest1 _Carries_dependency *p1 = rcu_dereference(g1p);
+44   thread1_help(&p1->rt);
+45 }
 \end{verbatim}
 }
 \caption{Object Modifier: Chain Fanning In and Out}
@@ -293,65 +247,55 @@ It need not necessarily interact with the type system.
 \begin{figure}[tbp]
 { \scriptsize
 \begin{verbatim}
- 1 void thread0(void)
+ 1 void thread0()
  2 {
- 3   struct rcutest *p;
- 4   struct rcutest1 *p1;
- 5
- 6   p = (struct rcutest *)malloc(sizeof(*p));
- 7   assert(p);
- 8   p->a = 42;
- 9   p->b = 43;
-10   rcu_assign_pointer(gp, p);
-11
-12   p1 = (struct rcutest *)malloc(sizeof(*p1));
-13   assert(p1);
-14   p1->a = 41;
-15   p1->rt.a = 42;
-16   p1->rt.b = 43;
-17   rcu_assign_pointer(g1p, p1);
-18 }
-19
-20 #ifdef FOO
-21 void
-22 thread1a_help(struct rcutest _Carries_dependency *q)
-23 {
-24   assert(q->a == 42);
-25 }
-26 #endif
+ 3   struct rcutest *p = new rcutest();
+ 4   p->a = 42;
+ 5   p->b = 43;
+ 6   rcu_assign_pointer(gp, p);
+ 7   struct rcutest1 *p1 = new rcutest1();
+ 8   p1->a = 41;
+ 9   p1->rt.a = 42;
+10   p1->rt.b = 43;
+11   rcu_assign_pointer(g1p, p1);
+12 }
+13
+14 #ifdef FOO
+15 void
+16 thread1a_help(rcutest _Carries_dependency *q)
+17 {
+18   assert(q->a == 42);
+19 }
+20 #endif
+21
+22 void
+23 thread1b_help(rcutest _Carries_dependency *q)
+24 {
+25   assert(q->b == 43);
+26 }
 27
 28 void
-29 thread1b_help(struct rcutest _Carries_dependency *q)
+29 thread1_help(rcutest _Carries_dependency *q)
 30 {
-31   assert(q->b == 43);
-32 }
-33
-34 void
-35 thread1_help(struct rcutest _Carries_dependency *q)
-36 {
-37   if (q) {
-38 #ifdef FOO
-39     thread1a_help(q);
-40 #endif
-41     thread1b_help(q);
-42   }
+31   if (q) {
+32 #ifdef FOO
+33     thread1a_help(q);
+34 #endif
+35     thread1b_help(q);
+36   }
+37 }
+38
+39 void thread1()
+40 {
+41   rcutest _Carries_dependency *p = rcu_dereference(gp);
+42   thread1_help(p);
 43 }
 44
-45 void thread1(void)
+45 void thread2()
 46 {
-47   struct rcutest _Carries_dependency *p;
-48
-49   p = rcu_dereference(gp);
-50   thread1_help(p);
-51 }
-52
-53 void thread2(void)
-54 {
-55   struct rcutest1 _Carries_dependency *p1;
-56
-57   p1 = rcu_dereference(g1p);
-58   thread1_help(&p1->rt);
-59 }
+47   rcutest1 _Carries_dependency *p1 = rcu_dereference(g1p);
+48   thread1_help(&p1->rt);
+49 }
 \end{verbatim}
 }
 \caption{Object Modifier: Conditional Compilation of Chain Endpoints}
@@ -361,30 +305,25 @@ It need not necessarily interact with the type system.
 \begin{figure}[tbp]
 { \scriptsize
 \begin{verbatim}
- 1 void thread0(void)
+ 1 void thread0()
  2 {
- 3   struct rcutest *p;
- 4
- 5   p = (struct rcutest *)malloc(sizeof(*p));
- 6   assert(p);
- 7   p->a = 42;
- 8   assert(p->a != 43);
- 9   rcu_assign_pointer(gp, p);
-10 }
-11
-12 void thread1(void)
-13 {
-14   struct rcutest _Carries_dependency *p;
-15
-16   p = rcu_dereference(gp);
-17   if (p) {
-18     assert(p->a >= 42);
-19     spin_lock(&p->lock);
-20     p = std::kill_dependency(p);
-21     p->a++;
-22     spin_unlock(&p->lock);
-23   }
-24 }
+ 3   rcutest *p = new rcutest();
+ 4   p->a = 42;
+ 5   assert(p->a != 43);
+ 6   rcu_assign_pointer(gp, p);
+ 7 }
+ 8
+ 9 void thread1()
+10 {
+11   rcutest _Carries_dependency *p = rcu_dereference(gp);
+12   if (p) {
+13     assert(p->a >= 42);
+14     spin_lock(&p->lock);
+15     p = std::kill_dependency(p);
+17     p->a++;
+18     spin_unlock(&p->lock);
+19   }
+20 }
 \end{verbatim}
 }
 \caption{Object Modifier: Handoff to Locking}
