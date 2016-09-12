@@ -22,10 +22,13 @@ public:
 	constexpr depending_ptr() noexcept;
 	explicit depending_ptr(pointer v) noexcept;
 	depending_ptr(nullptr_t) noexcept;
-	depending_ptr(depending_ptr &&d) noexcept;
+	depending_ptr(const depending_ptr &d) noexcept;
+	depending_ptr(const depending_ptr &&d) noexcept;
 
 	// Assignment
-	depending_ptr& operator=(depending_ptr&& d) noexcept;
+	depending_ptr& operator=(pointer p) noexcept;
+	depending_ptr& operator=(const depending_ptr &d) noexcept;
+	depending_ptr& operator=(const depending_ptr &&d) noexcept;
 	depending_ptr& operator=(nullptr_t) noexcept;
 
 	// Modifiers
@@ -88,10 +91,13 @@ private:
 template<typename T> constexpr depending_ptr<T>::depending_ptr() noexcept : dp_rep(nullptr) {}
 template<typename T> depending_ptr<T>::depending_ptr(pointer v) noexcept : dp_rep(v) {}
 template<typename T> depending_ptr<T>::depending_ptr(nullptr_t) noexcept : depending_ptr() {}
-template<typename T> depending_ptr<T>::depending_ptr(depending_ptr &&d) noexcept : dp_rep(d.dp_rep) {}
+template<typename T> depending_ptr<T>::depending_ptr(const depending_ptr &d) noexcept : dp_rep(d.dp_rep) {}
+template<typename T> depending_ptr<T>::depending_ptr(const depending_ptr &&d) noexcept : dp_rep(d.dp_rep) {}
 
 // Assignment
-template<typename T> depending_ptr<T>& depending_ptr<T>::operator=(depending_ptr<T>&& d) noexcept { dp_rep = d.dp_rep; return *this; }
+template<typename T> depending_ptr<T>& depending_ptr<T>::operator=(pointer p) noexcept { dp_rep = p; return *this; }
+template<typename T> depending_ptr<T>& depending_ptr<T>::operator=(const depending_ptr<T> &d) noexcept { dp_rep = d.dp_rep; return *this; }
+template<typename T> depending_ptr<T>& depending_ptr<T>::operator=(const depending_ptr<T> &&d) noexcept { dp_rep = d.dp_rep; return *this; }
 template<typename T> depending_ptr<T>& depending_ptr<T>::operator=(nullptr_t) noexcept { dp_rep = nullptr; return *this; }
 
 // Modifiers
@@ -190,7 +196,7 @@ depending_ptr<T> depending_ptr<T>::operator-=(long idx)
 // RCU functions for testing, not necessarily for standardization.
 
 template<typename T>
-depending_ptr<T> rcu_consume(std::atomic<typename depending_ptr<T>::pointer> *p)
+depending_ptr<T> rcu_consume(std::atomic<T*> *p)
 {
 	volatile std::atomic<typename depending_ptr<T>::pointer> *q = p;
 	// Change to memory_order_consume once it is fixed
@@ -200,27 +206,27 @@ depending_ptr<T> rcu_consume(std::atomic<typename depending_ptr<T>::pointer> *p)
 }
 
 template<typename T>
-depending_ptr<T> rcu_consume(typename depending_ptr<T>::pointer p)
+depending_ptr<T> rcu_consume(T *p)
 {
 	// Alternatively, could cast p to volatile atomic...
-	depending_ptr<T> temp(*(typename depending_ptr<T>::pointer volatile *)&p);
+	depending_ptr<T> temp(*(T *volatile *)&p);
 
 	return temp;
 }
 
 template<typename T>
-typename depending_ptr<T>::pointer rcu_store_release(std::atomic<typename depending_ptr<T>::pointer> *p, typename depending_ptr<T>::pointer v)
+T* rcu_store_release(std::atomic<T*> *p, T *v)
 {
 	p->store(v, std::memory_order_release);
 	return v;
 }
 
 template<typename T>
-typename depending_ptr<T>::pointer rcu_store_release(typename depending_ptr<T>::pointer *p, typename depending_ptr<T>::pointer v)
+T* rcu_store_release(T **p, T *v)
 {
 	// Alternatively, could cast p to volatile atomic...
 	atomic_thread_fence(std::memory_order_release);
-	*((volatile typename depending_ptr<T>::pointer *)p) = v;
+	*((volatile T **)p) = v;
 	return v;
 }
 

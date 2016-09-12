@@ -3,7 +3,8 @@
 
 int main(int argc, char **argv)
 {
-	char *cp = (char *)"abcde";
+	char arr[] = { 'a', 'b', 'c', 'd', 'e', '\0' };
+	char *cp = arr;
 	char *cp1;
 	char *cp2;
 	depending_ptr<char> p(&cp[1]);

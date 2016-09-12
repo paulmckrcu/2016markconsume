@@ -1,38 +1,36 @@
-echo depending_ptr_simple
-g++ -std=c++11 -g -o depending_ptr_simple depending_ptr_simple.cpp -lpthread &&
+#!/bin/bash
+
+set -e
+set -u
+set -x
+
+CC=${CC:-g++}
+
+$CC -std=c++11 -g -o depending_ptr_simple depending_ptr_simple.cpp -lpthread &&
 	./depending_ptr_simple
 
-echo depending_ptr_inparam
-g++ -std=c++11 -g -o depending_ptr_inparam depending_ptr_inparam.cpp -lpthread &&
+$CC -std=c++11 -g -o depending_ptr_inparam depending_ptr_inparam.cpp -lpthread &&
 	./depending_ptr_inparam
 
-echo depending_ptr_outreturn
-g++ -std=c++11 -g -o depending_ptr_outreturn depending_ptr_outreturn.cpp -lpthread &&
+$CC -std=c++11 -g -o depending_ptr_outreturn depending_ptr_outreturn.cpp -lpthread &&
 	./depending_ptr_outreturn
 
-echo depending_ptr_inout
-g++ -std=c++11 -g -o depending_ptr_inout depending_ptr_inout.cpp -lpthread &&
+$CC -std=c++11 -g -o depending_ptr_inout depending_ptr_inout.cpp -lpthread &&
 	./depending_ptr_inout
 
-echo depending_ptr_fanout
-g++ -std=c++11 -g -o depending_ptr_fanout depending_ptr_fanout.cpp -lpthread &&
+$CC -std=c++11 -g -o depending_ptr_fanout depending_ptr_fanout.cpp -lpthread &&
 	./depending_ptr_fanout
 
-echo depending_ptr_fanin
-g++ -std=c++11 -g -o depending_ptr_fanin depending_ptr_fanin.cpp -lpthread &&
+$CC -std=c++11 -g -o depending_ptr_fanin depending_ptr_fanin.cpp -lpthread &&
 	./depending_ptr_fanin
 
-echo depending_ptr_faninout
-g++ -std=c++11 -g -o depending_ptr_faninout depending_ptr_faninout.cpp -lpthread &&
+$CC -std=c++11 -g -o depending_ptr_faninout depending_ptr_faninout.cpp -lpthread &&
 	./depending_ptr_faninout
 
-echo depending_ptr_condcomp
-g++ -std=c++11 -g -o depending_ptr_condcomp depending_ptr_condcomp.cpp -lpthread &&
+$CC -std=c++11 -g -o depending_ptr_condcomp depending_ptr_condcomp.cpp -lpthread &&
 	./depending_ptr_condcomp
-echo depending_ptr_condcomp FOO
-g++ -std=c++11 -g -DFOO -o depending_ptr_condcomp depending_ptr_condcomp.cpp -lpthread &&
+$CC -std=c++11 -g -DFOO -o depending_ptr_condcomp depending_ptr_condcomp.cpp -lpthread &&
 	./depending_ptr_condcomp
 
-echo depending_ptr_handoff
-g++ -std=c++11 -g -o depending_ptr_handoff depending_ptr_handoff.cpp -lpthread &&
+$CC -std=c++11 -g -o depending_ptr_handoff depending_ptr_handoff.cpp -lpthread &&
 	./depending_ptr_handoff
