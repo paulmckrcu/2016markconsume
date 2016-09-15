@@ -37,7 +37,6 @@ int main(int argc, char** argv)
 {
     pthread_t tid0;
     pthread_t tid1;
-    rcutest* p;
 
     if (pthread_create(&tid0, nullptr, thread0, nullptr)) {
         perror("pthread_create(thread0)");
