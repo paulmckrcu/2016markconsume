@@ -1,4 +1,8 @@
+#ifndef COMMON_HPP
+#define COMMON_HPP
+
 #include <errno.h>
+#include <iostream>
 #include <pthread.h>
 
 typedef pthread_mutex_t spinlock_t;
@@ -50,3 +54,5 @@ std::atomic<rcutest1*> g1p;
 std::atomic<int*> gip;
 rcutest* gslp; /* Global scope, local usage. */
 std::atomic<rcutest*> gsgp;
+
+#endif

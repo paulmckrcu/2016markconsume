@@ -1,5 +1,9 @@
+#ifndef DEPENDING_PTR_HPP
+#define DEPENDING_PTR_HPP
+
 #include <atomic>
 #include <cstdint>
+#include <ostream>
 
 namespace std {
 bool pointer_cmp_eq_dep(void* p, void* q) noexcept;
@@ -260,3 +264,5 @@ T* rcu_store_release(T** p, T* v)
 
 #define rcu_dereference(p) rcu_consume(p)
 #define rcu_assign_pointer(p, v) rcu_store_release(&(p), v)
+
+#endif
