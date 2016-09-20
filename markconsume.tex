@@ -166,11 +166,42 @@ and evaluates each against a set of representative use cases.
 16 struct rcutest *gslp; /* Global scope, local usage. */
 17 std::atomic<rcutest *> gsgp;
 18
-19 #define rcu_assign_pointer(p, v) \
-20   atomic_store_explicit(&(p), (v),
-21                         std::memory_order_release);
-22 #define rcu_dereference(p) \
-23   atomic_load_explicit(&(p), std::memory_order_consume);
+19 template<typename T>
+20 T *rcu_consume(std::atomic<T*> *p)
+21 {
+22   volatile std::atomic<T> *q = p;
+23   // Change to memory_order_consume once it is fixed
+24   depending_ptr<T> temp(q->load(std::memory_order_relaxed));
+25   return temp;
+26 }
+27
+28 template<typename T>
+29 T *rcu_consume(T *p)
+30 {
+31   // Alternatively, could cast p to volatile atomic...
+32   T *temp(*(T *volatile *)&p);
+33   return temp;
+34 }
+35
+36 template<typename T>
+37 T* rcu_store_release(std::atomic<T*> *p, T *v)
+38 {
+39   p->store(v, std::memory_order_release);
+40   return v;
+41 }
+42
+43 template<typename T>
+44 T* rcu_store_release(T **p, T *v)
+45 {
+46   // Alternatively, could cast p to volatile atomic...
+47   atomic_thread_fence(std::memory_order_release);
+48   *((volatile T **)p) = v;
+49   return v;
+50 }
+51
+52 // Linux-kernel compatibility macros, not for atomics
+53 #define rcu_dereference(p) rcu_consume(p)
+54 #define rcu_assign_pointer(p, v) rcu_store_release(&(p), v)
 \end{verbatim}
 }
 \caption{Common Definitions}
@@ -202,25 +233,27 @@ followed by a discussion of evaluation criteria.
 \begin{figure}[tbp]
 { \scriptsize
 \begin{verbatim}
- 1 void thread0(void)
+ 1 void *thread0(void *unused)
  2 {
- 3   struct rcutest *p;
+ 3   rcutest *p;
  4
- 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 5   p = new rcutest();
  6   assert(p);
  7   p->a = 42;
  8   assert(p->a != 43);
- 9   rcu_assign_pointer(gp, p);
-10 }
-11
-12 void thread1(void)
-13 {
-14   struct rcutest *p;
-15
-16   p = rcu_dereference(gp);
-17   if (p)
-18     p->a = 43;
-19 }
+ 9   rcu_store_release(&gp, p);
+10   return nullptr;
+11 }
+12
+13 void *thread1(void *unused)
+14 {
+15   rcutest p;
+16
+17   p = rcu_consume(&gp);
+18   if (p)
+19     p->a = 43;
+20   return nullptr;
+21 }
 \end{verbatim}
 }
 \caption{Simple Case}
@@ -244,7 +277,7 @@ proposal should handle this example simply and naturally.
  2 {
  3   struct rcutest *p;
  4
- 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 5   p = new rcutest;
  6   assert(p);
  7   p->a = 42;
  8   rcu_assign_pointer(gp, p);
@@ -286,7 +319,7 @@ This is a common encapsulation technique.
  2 {
  3   struct rcutest *p;
  4
- 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 5   p = new rcutest;
  6   assert(p);
  7   p->a = 42;
  8   rcu_assign_pointer(gp, p);
@@ -327,12 +360,12 @@ This is also a common encapsulation technique.
  2 {
  3   struct rcutest *p;
  4
- 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 5   p = new rcutest;
  6   assert(p);
  7   p->a = 42;
  8   rcu_assign_pointer(gp, p);
  9
-10   p = (struct rcutest *)malloc(sizeof(*p));
+10   p = new rcutest;
 11   assert(p);
 12   p->a = 43;
 13   rcu_assign_pointer(gsgp, p);
@@ -376,7 +409,7 @@ but where they are different chains.
  2 {
  3   struct rcutest *p;
  4
- 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 5   p = new rcutest;
  6   assert(p);
  7   p->a = 42;
  8   rcu_assign_pointer(gp, p);
@@ -433,12 +466,12 @@ another.
  3   struct rcutest *p;
  4   struct rcutest1 *p1;
  5
- 6   p = (struct rcutest *)malloc(sizeof(*p));
+ 6   p = new rcutest;
  7   assert(p);
  8   p->a = 42;
  9   rcu_assign_pointer(gp, p);
 10
-11   p1 = (struct rcutest *)malloc(sizeof(*p1));
+11   p1 = new rcutest;
 12   assert(p1);
 13   p1->a = 41;
 14   p1->rt.a = 42;
@@ -491,13 +524,13 @@ to be aggregated into several different data structures.
  3   struct rcutest *p;
  4   struct rcutest1 *p1;
  5
- 6   p = (struct rcutest *)malloc(sizeof(*p));
+ 6   p = new rcutest;
  7   assert(p);
  8   p->a = 42;
  9   p->b = 43;
 10   rcu_assign_pointer(gp, p);
 11
-12   p1 = (struct rcutest *)malloc(sizeof(*p1));
+12   p1 = new rcutest;
 13   assert(p1);
 14   p1->a = 41;
 15   p1->rt.a = 42;
@@ -568,13 +601,13 @@ and~\ref{sec:Chain Fanning In}.
  3   struct rcutest *p;
  4   struct rcutest1 *p1;
  5
- 6   p = (struct rcutest *)malloc(sizeof(*p));
+ 6   p = new rcutest;
  7   assert(p);
  8   p->a = 42;
  9   p->b = 43;
 10   rcu_assign_pointer(gp, p);
 11
-12   p1 = (struct rcutest *)malloc(sizeof(*p1));
+12   p1 = new rcutest;
 13   assert(p1);
 14   p1->a = 41;
 15   p1->rt.a = 42;
@@ -647,7 +680,7 @@ on the value of the C-preprocessor macro \co{FOO}.
  2 {
  3   struct rcutest *p;
  4
- 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 5   p = new rcutest;
  6   assert(p);
  7   p->a = 42;
  8   assert(p->a != 43);
