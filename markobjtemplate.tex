@@ -21,52 +21,64 @@ that used for atomics.
 \begin{figure}[tbp]
 { \scriptsize
 \begin{verbatim}
- 1 template<typename T> class depending_ptr {
- 2 public:
- 3   depending_ptr(T *v) noexcept;
- 4   depending_ptr() noexcept;
- 5   bool operator!() noexcept;
- 6   class depending_ptr<T>* operator&();
- 7   T operator*();
- 8   T *operator->();
- 9   class depending_ptr<T> operator++();
-10   class depending_ptr<T> operator++(int);
-11   class depending_ptr<T> operator--();
-12   class depending_ptr<T> operator--(int);
-13   operator T*();
-14   T operator[](long int);
-15   bool operator==(T *v) noexcept;
-16   bool operator!=(T *v) noexcept;
-17   bool operator>(T *v) noexcept;
-18   bool operator>=(T *v) noexcept;
-19   bool operator<(T *v) noexcept;
-20   bool operator<=(T *v) noexcept;
-21   class depending_ptr<T> operator+(long idx);
-22   class depending_ptr<T> operator+=(long idx);
-23   class depending_ptr<T> operator-(long idx);
-24   class depending_ptr<T> operator-=(long idx);
-25   int operator~() = delete;
-26   int operator+() = delete;
-27   int operator-() = delete;
-28   int operator&(long int) = delete;
-29   int operator&=(long int) = delete;
-30   int operator%(long int) = delete;
-31   int operator%=(long int) = delete;
-32   int operator*(long int) = delete;
-33   int operator*=(long int) = delete;
-34   int operator/(long int) = delete;
-35   int operator/=(long int) = delete;
-36   int operator<<(long int) = delete;
-37   int operator<<=(long int) = delete;
-38   int operator>>(long int) = delete;
-39   int operator>>=(long int) = delete;
-40   int operator^(long int) = delete;
-41   int operator^=(long int) = delete;
-42   int operator|(long int) = delete;
-43   int operator|=(long int) = delete;
-44 private:
-45   T *dp_rep;
-46 };
+ 1 template<typename T>
+ 2 class depending_ptr {
+ 3 public:
+ 4   typedef T* pointer;
+ 5   typedef T element_type;
+ 6
+ 7   // Constructors
+ 8   constexpr depending_ptr() noexcept;
+ 9   explicit depending_ptr(pointer v) noexcept;
+10   depending_ptr(nullptr_t) noexcept;
+11   depending_ptr(const depending_ptr &d) noexcept;
+12   depending_ptr(const depending_ptr &&d) noexcept;
+13
+14   // Assignment
+15   depending_ptr& operator=(pointer p) noexcept;
+16   depending_ptr& operator=(const depending_ptr &d) noexcept;
+17   depending_ptr& operator=(const depending_ptr &&d) noexcept;
+18   depending_ptr& operator=(nullptr_t) noexcept;
+19
+20   // Modifiers
+21   void swap(depending_ptr& d) noexcept;
+22
+23   // Unary operators
+24   // No operator!
+25   // No prefix bitwise complement operator
+26   element_type operator*();
+27   pointer operator->();
+28   depending_ptr<element_type> operator++();
+29   depending_ptr<element_type> operator++(int);
+30   depending_ptr<element_type> operator--();
+31   depending_ptr<element_type> operator--(int);
+32   pointer get() const noexcept;
+33   explicit operator bool();
+34   element_type operator[](size_t);
+35
+36   // Binary relational operators
+37   bool operator==(depending_ptr v) noexcept;
+38   bool operator!=(depending_ptr v) noexcept;
+39   bool operator>(depending_ptr v) noexcept;
+40   bool operator>=(depending_ptr v) noexcept;
+41   bool operator<(depending_ptr v) noexcept;
+42   bool operator<=(depending_ptr v) noexcept;
+43   bool operator==(pointer v) noexcept;
+44   bool operator!=(pointer v) noexcept;
+45   bool operator>(pointer v) noexcept;
+46   bool operator>=(pointer v) noexcept;
+47   bool operator<(pointer v) noexcept;
+48   bool operator<=(pointer v) noexcept;
+49
+50   // Other binary operators
+51   depending_ptr<T> operator+(size_t idx);
+52   depending_ptr<T> operator+=(size_t idx);
+53   depending_ptr<T> operator-(size_t idx);
+54   depending_ptr<T> operator-=(size_t idx);
+55
+56 private:
+57   pointer dp_rep;
+58 };
 \end{verbatim}
 }
 \caption{Template: Declaration}
@@ -86,6 +98,54 @@ that used for atomics.
 }
 \caption{Dependency-Preserving Comparisons}
 \label{fig:Dependency-Preserving Comparisons}
+\end{figure}
+
+\begin{figure}[tbp]
+{ \scriptsize
+\begin{verbatim}
+ 1 template<typename T>
+ 2 depending_ptr<T> rcu_consume(std::atomic<T*> *p)
+ 3 {
+ 4   volatile std::atomic<typename
+ 5            depending_ptr<T>::pointer> *q = p;
+ 6   // Change to memory_order_consume once it is fixed
+ 7   depending_ptr<T> temp(q->load(std::memory_order_relaxed));
+ 8
+ 9   return temp;
+10 }
+11
+12 template<typename T>
+13 depending_ptr<T> rcu_consume(T *p)
+14 {
+15   // Alternatively, could cast p to volatile atomic...
+16   depending_ptr<T> temp(*(T *volatile *)&p);
+17
+18   return temp;
+19 }
+20
+21 template<typename T>
+22 T* rcu_store_release(std::atomic<T*> *p, T *v)
+23 {
+24   p->store(v, std::memory_order_release);
+25   return v;
+26 }
+27
+28 template<typename T>
+29 T* rcu_store_release(T **p, T *v)
+30 {
+31   // Alternatively, could cast p to volatile atomic...
+32   atomic_thread_fence(std::memory_order_release);
+33   *((volatile T **)p) = v;
+34   return v;
+35 }
+36
+37 // Linux-kernel compatibility macros, not for atomics
+38 #define rcu_dereference(p) rcu_consume(p)
+39 #define rcu_assign_pointer(p, v) rcu_store_release(&(p), v)
+\end{verbatim}
+}
+\caption{Dependency-Preserving Release and Consume}
+\label{fig:Dependency-Preserving Release and Consume}
 \end{figure}
 
 Figure~\ref{fig:Template: Declaration}
@@ -109,33 +169,39 @@ chains.\footnote{
 	In the absence of link-time optimizations, separate compilation
 	preserves dependency chains in most implementations.}
 In addition, the operators that cannot be safely applied to
-dependency-bearing pointers have been deleted.\footnote{
+dependency-bearing pointers are omitted.\footnote{
 	The number of pointer-tagging algorithms should motivate
 	allowing bitwise operations on dependency-bearing
 	pointers, but this should be handled separately.}
+Finally, Figure~\ref{fig:Dependency-Preserving Release and Consume}
+shows how the Linux-kernel-style \co{rcu_dereference()} and
+\co{rcu_assign_pointer()} macros could be implemented given this
+templated approach.
 
 \begin{figure}[tbp]
 { \scriptsize
 \begin{verbatim}
- 1 void thread0(void)
+ 1 void *thread0(void *unused)
  2 {
- 3   struct rcutest *p;
+ 3   rcutest *p;
  4
- 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 5   p = new rcutest();
  6   assert(p);
  7   p->a = 42;
  8   assert(p->a != 43);
  9   rcu_store_release(&gp, p);
-10 }
-11
-12 void thread1(void)
-13 {
-14   depending_ptr<struct rcutest> p;
-15
-16   p = rcu_consume(&gp);
-17   if (p)
-18     p->a = 43;
-19 }
+10   return nullptr;
+11 }
+12
+13 void *thread1(void *unused)
+14 {
+15   depending_ptr<rcutest> p;
+16
+17   p = rcu_consume(&gp);
+18   if (p)
+19     p->a = 43;
+20   return nullptr;
+21 }
 \end{verbatim}
 }
 \caption{Template: Simple Case}
@@ -145,30 +211,32 @@ dependency-bearing pointers have been deleted.\footnote{
 \begin{figure}[tbp]
 { \scriptsize
 \begin{verbatim}
- 1 void thread0(void)
+ 1 void *thread0(void *unused)
  2 {
- 3   struct rcutest *p;
+ 3   rcutest *p;
  4
- 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 5   p = new rcutest();
  6   assert(p);
  7   p->a = 42;
  8   rcu_store_release(&gp, p);
- 9 }
-10
-11 void
-12 thread1_help(depending_ptr<struct rcutest> q)
-13 {
-14   if (q)
-15     assert(q->a == 42);
-16 }
-17
-18 void thread1(void)
-19 {
-20   depending_ptr<struct rcutest> p;
-21
-22   p = rcu_consume(&gp);
-23   thread1_help(p);
-24 }
+ 9   return nullptr;
+10 }
+11
+12 void
+13 thread1_help(depending_ptr<rcutest> q)
+14 {
+15   if (q)
+16     assert(q->a == 42);
+17 }
+18
+19 void *thread1(void *unused)
+20 {
+21   depending_ptr<rcutest> p;
+22
+23   p = rcu_consume(&gp);
+24   thread1_help(p);
+25   return nullptr;
+26 }
 \end{verbatim}
 }
 \caption{Template: In via Function Parameter}
@@ -178,29 +246,31 @@ dependency-bearing pointers have been deleted.\footnote{
 \begin{figure}[tbp]
 { \scriptsize
 \begin{verbatim}
- 1 void thread0(void)
+ 1 void *thread0(void *unused)
  2 {
- 3   struct rcutest *p;
+ 3   rcutest *p;
  4
- 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 5   p = new rcutest();
  6   assert(p);
  7   p->a = 42;
  8   rcu_store_release(&gp, p);
- 9 }
-10
-11 depending_ptr<struct rcutest> thread1_help(void)
-12 {
-13   return rcu_consume(&gp);
-14 }
-15
-16 void thread1(void)
-17 {
-18   depending_ptr<struct rcutest> p;
-19
-20   p = thread1_help();
-21   if (p)
-22     assert(p->a == 42);
-23 }
+ 9   return nullptr;
+10 }
+11
+12 depending_ptr<rcutest> thread1_help()
+13 {
+14   return rcu_consume(&gp);
+15 }
+16
+17 void *thread1(void *unused)
+18 {
+19   depending_ptr<rcutest> p;
+20
+21   p = thread1_help();
+22   if (p)
+23     p->a = 43;
+24   return nullptr;
+25 }
 \end{verbatim}
 }
 \caption{Template: Out via Function Return}
@@ -210,38 +280,41 @@ dependency-bearing pointers have been deleted.\footnote{
 \begin{figure}[tbp]
 { \scriptsize
 \begin{verbatim}
- 1 void thread0(void)
+ 1 void *thread0(void *unused)
  2 {
- 3   struct rcutest *p;
+ 3   rcutest *p;
  4
- 5   p = (struct rcutest *)malloc(sizeof(*p));
+ 5   p = new rcutest();
  6   assert(p);
  7   p->a = 42;
  8   rcu_store_release(&gp, p);
  9
-10   p = (struct rcutest *)malloc(sizeof(*p));
+10   p = new rcutest();
 11   assert(p);
 12   p->a = 43;
 13   rcu_store_release(&gsgp, p);
-14 }
-15
-16 depending_ptr<struct rcutest> 
-17 thread1_help(depending_ptr<struct rcutest> p)
-18 {
-19   if (p)
-20     assert(p->a == 42);
-21   return rcu_consume(&gsgp);
-22 }
-23
-24 void thread1(void)
-25 {
-26   depending_ptr<struct rcutest> p;
-27
-28   p = rcu_consume(&gp);
-29   p = thread1_help(p);
-30   if (p)
-31     assert(p->a == 43);
-32 }
+14
+15   return nullptr;
+16 }
+17
+18 depending_ptr<rcutest>
+19 thread1_help(depending_ptr<rcutest> p)
+20 {
+21   if (p)
+22     assert(p->a == 42);
+23   return rcu_consume(&gsgp);
+24 }
+25
+26 void *thread1(void *unused)
+27 {
+28   depending_ptr<rcutest> p;
+29
+30   p = rcu_consume(&gp);
+31   p = thread1_help(p);
+32   if (p)
+33     assert(p->a == 43);
+34   return nullptr;
+35 }
 \end{verbatim}
 }
 \caption{Template: In and Out, But Different Chains}
@@ -251,38 +324,37 @@ dependency-bearing pointers have been deleted.\footnote{
 \begin{figure}[tbp]
 { \scriptsize
 \begin{verbatim}
- 1 void thread0(void)
+ 1 void *thread0(void *unused)
  2 {
- 3   struct rcutest *p;
+ 3   rcutest *p;
  4
- 5   p = (struct rcutest *)malloc(sizeof(*p));
- 6   assert(p);
- 7   p->a = 42;
- 8   rcu_store_release(&gp, p);
+ 5   p = new rcutest();
+ 6   p->a = 42;
+ 7   rcu_store_release(&gp, p);
+ 8   return nullptr;
  9 }
 10
-11 void
-12 thread1_help1(depending_ptr<struct rcutest> q)
-13 {
-14   if (q)
-15     assert(q->a == 42);
-16 }
-17
-18 void
-19 thread1_help2(depending_ptr<struct rcutest> q)
-20 {
-21   if (q)
-22     assert(q->a != 43);
-23 }
-24
-25 void thread1(void)
-26 {
-27   depending_ptr<struct rcutest> p;
-28
-29   p = rcu_consume(&gp);
-30   thread1_help1(p);
-31   thread1_help2(p);
-32 }
+11 void thread1_help1(depending_ptr<rcutest> q)
+12 {
+13   if (q)
+14     assert(q->a == 42);
+15 }
+16
+17 void thread1_help2(depending_ptr<rcutest> q)
+18 {
+19   if (q)
+20     assert(q->a != 43);
+21 }
+22
+23 void *thread1(void *unused)
+24 {
+25   depending_ptr<rcutest> p;
+26
+27   p = rcu_consume(&gp);
+28   thread1_help1(p);
+29   thread1_help2(p);
+30   return nullptr;
+31 }
 \end{verbatim}
 }
 \caption{Template: Chain Fanning Out}
@@ -292,45 +364,46 @@ dependency-bearing pointers have been deleted.\footnote{
 \begin{figure}[tbp]
 { \scriptsize
 \begin{verbatim}
- 1 void thread0(void)
+ 1 void *thread0(void *unused)
  2 {
- 3   struct rcutest *p;
- 4   struct rcutest1 *p1;
+ 3   rcutest *p;
+ 4   rcutest1 *p1;
  5
- 6   p = (struct rcutest *)malloc(sizeof(*p));
- 7   assert(p);
- 8   p->a = 42;
- 9   rcu_store_release(&gp, p);
-10
-11   p1 = (struct rcutest *)malloc(sizeof(*p1));
-12   assert(p1);
-13   p1->a = 41;
-14   p1->rt.a = 42;
-15   rcu_store_release(&g1p, p1);
+ 6   p = new rcutest();
+ 7   p->a = 42;
+ 8   rcu_store_release(&gp, p);
+ 9
+10   p1 = new rcutest1();
+11   p1->a = 41;
+12   p1->rt.a = 42;
+13   rcu_store_release(&g1p, p1);
+14
+15   return nullptr;
 16 }
 17
-18 void
-19 thread1_help(depending_ptr<struct rcutest> q)
-20 {
-21   if (q)
-22     assert(q->a == 42);
-23 }
-24
-25 void thread1(void)
-26 {
-27   depending_ptr<struct rcutest> p;
-28
-29   p = rcu_consume(&gp);
-30   thread1_help(p);
+18 void thread1_help(depending_ptr<rcutest> q)
+19 {
+20   if (q)
+21     assert(q->a == 42);
+22 }
+23
+24 void *thread1(void *unused)
+25 {
+26   depending_ptr<rcutest> p;
+27
+28   p = rcu_consume(&gp);
+29   thread1_help(p);
+30   return nullptr;
 31 }
 32
-33 void thread2(void)
+33 void *thread2(void *unused)
 34 {
-35   depending_ptr<struct rcutest1> p1;
+35   depending_ptr<rcutest1> p1;
 36
 37   p1 = rcu_consume(&g1p);
-38   thread1_help(&p1->rt);
-39 }
+38   thread1_help(depending_ptr<rcutest>(&p1->rt));
+39   return nullptr;
+40 }
 \end{verbatim}
 }
 \caption{Template: Chain Fanning In}
@@ -340,61 +413,62 @@ dependency-bearing pointers have been deleted.\footnote{
 \begin{figure}[tbp]
 { \scriptsize
 \begin{verbatim}
- 1 void thread0(void)
+ 1 void *thread0(void *unused)
  2 {
- 3   struct rcutest *p;
- 4   struct rcutest1 *p1;
+ 3   rcutest *p;
+ 4   rcutest1 *p1;
  5
- 6   p = (struct rcutest *)malloc(sizeof(*p));
+ 6   p = new rcutest();
  7   assert(p);
  8   p->a = 42;
  9   p->b = 43;
 10   rcu_store_release(&gp, p);
 11
-12   p1 = (struct rcutest *)malloc(sizeof(*p1));
+12   p1 = new rcutest1();
 13   assert(p1);
 14   p1->a = 41;
 15   p1->rt.a = 42;
 16   p1->rt.b = 43;
 17   rcu_store_release(&g1p, p1);
-18 }
-19
-20 void
-21 thread1a_help(depending_ptr<struct rcutest> q)
-22 {
-23   assert(q->a == 42);
-24 }
-25
-26 void
-27 thread1b_help(depending_ptr<struct rcutest> q)
+18
+19   return nullptr;
+20 }
+21
+22 void thread1a_help(depending_ptr<rcutest> q)
+23 {
+24   assert(q->a == 42);
+25 }
+26
+27 void thread1b_help(depending_ptr<rcutest> q)
 28 {
 29   assert(q->b == 43);
 30 }
 31
-32 void
-33 thread1_help(depending_ptr<struct rcutest> q)
-34 {
-35   if (q) {
-36     thread1a_help(q);
-37     thread1b_help(q);
-38   }
-39 }
-40
-41 void thread1(void)
-42 {
-43   depending_ptr<struct rcutest> p;
-44
-45   p = rcu_consume(&gp);
-46   thread1_help(p);
+32 void thread1_help(depending_ptr<rcutest> q)
+33 {
+34   if (q) {
+35     thread1a_help(q);
+36     thread1b_help(q);
+37   }
+38 }
+39
+40 void *thread1(void *unused)
+41 {
+42   depending_ptr<rcutest> p;
+43
+44   p = rcu_consume(&gp);
+45   thread1_help(p);
+46   return nullptr;
 47 }
 48
-49 void thread2(void)
+49 void *thread2(void *unused)
 50 {
-51   depending_ptr<struct rcutest1> p1;
+51   depending_ptr<rcutest1> p1;
 52
 53   p1 = rcu_consume(&g1p);
-54   thread1_help(&p1->rt);
-55 }
+54   thread1_help(depending_ptr<rcutest>(&p1->rt));
+55   return nullptr;
+56 }
 \end{verbatim}
 }
 \caption{Template: Chain Fanning In and Out}
@@ -404,65 +478,66 @@ dependency-bearing pointers have been deleted.\footnote{
 \begin{figure}[tbp]
 { \scriptsize
 \begin{verbatim}
- 1 void thread0(void)
+ 1 void *thread0(void *unused)
  2 {
- 3   struct rcutest *p;
- 4   struct rcutest1 *p1;
+ 3   rcutest *p;
+ 4   rcutest1 *p1;
  5
- 6   p = (struct rcutest *)malloc(sizeof(*p));
+ 6   p = new rcutest();
  7   assert(p);
  8   p->a = 42;
  9   p->b = 43;
 10   rcu_store_release(&gp, p);
 11
-12   p1 = (struct rcutest *)malloc(sizeof(*p1));
+12   p1 = new rcutest1();
 13   assert(p1);
 14   p1->a = 41;
 15   p1->rt.a = 42;
 16   p1->rt.b = 43;
 17   rcu_store_release(&g1p, p1);
-18 }
-19
-20 #ifdef FOO
-21 void
-22 thread1a_help(depending_ptr<struct rcutest> q)
-23 {
-24   assert(q->a == 42);
-25 }
-26 #endif
-27
-28 void
-29 thread1b_help(depending_ptr<struct rcutest> q)
+18
+19   return nullptr;
+20 }
+21
+22 #ifdef FOO
+23 void thread1a_help(depending_ptr<rcutest> q)
+24 {
+25   assert(q->a == 42);
+26 }
+27 #endif
+28
+29 void thread1b_help(depending_ptr<rcutest> q)
 30 {
 31   assert(q->b == 43);
 32 }
 33
-34 void
-35 thread1_help(depending_ptr<struct rcutest> q)
-36 {
-37   if (q) {
-38 #ifdef FOO
-39     thread1a_help(q);
-40 #endif
-41     thread1b_help(q);
-42   }
-43 }
-44
-45 void thread1(void)
-46 {
-47   depending_ptr<struct rcutest> p;
-48
-49   p = rcu_consume(&gp);
-50   thread1_help(p);
+34 void thread1_help(depending_ptr<rcutest> q)
+35 {
+36   if (q) {
+37 #ifdef FOO
+38     thread1a_help(q);
+39 #endif
+40     thread1b_help(q);
+41   }
+42 }
+43
+44 void *thread1(void *unused)
+45 {
+46   depending_ptr<rcutest> p;
+47
+48   p = rcu_consume(&gp);
+49   thread1_help(p);
+50   return nullptr;
 51 }
 52
-53 void thread2(void)
+53 void *thread2(void *unused)
 54 {
-55   depending_ptr<struct rcutest1> p1;
+55   depending_ptr<rcutest1> p1;
 56
 57   p1 = rcu_consume(&g1p);
-58   thread1_help(&p1->rt);
-59 }
+58   thread1_help(depending_ptr<rcutest>(&p1->rt));
+59   return nullptr;
+60 }
 \end{verbatim}
 }
 \caption{Template: Conditional Compilation of Chain Endpoints}
@@ -472,30 +547,31 @@ dependency-bearing pointers have been deleted.\footnote{
 \begin{figure}[tbp]
 { \scriptsize
 \begin{verbatim}
- 1 void thread0(void)
+ 1 void *thread0(void *unused)
  2 {
- 3   struct rcutest *p;
+ 3   rcutest *p;
  4
- 5   p = (struct rcutest *)malloc(sizeof(*p));
- 6   assert(p);
- 7   p->a = 42;
- 8   assert(p->a != 43);
- 9   rcu_store_release(&gp, p);
+ 5   p = new rcutest();
+ 6   p->a = 42;
+ 7   assert(p->a != 43);
+ 8   rcu_store_release(&gp, p);
+ 9   return nullptr;
 10 }
 11
-12 void thread1(void)
+12 void *thread1(void *unused)
 13 {
-14   depending_ptr<struct rcutest> p;
+14   depending_ptr<rcutest> p;
 15
 16   p = rcu_consume(&gp);
 17   if (p) {
-18     assert(p->a >= 42);
+18     assert(p->a == 42);
 19     spin_lock(&p->lock);
 20     p = std::kill_dependency(p);
 21     p->a++;
 22     spin_unlock(&p->lock);
 23   }
-24 }
+24   return nullptr;
+25 }
 \end{verbatim}
 }
 \caption{Template: Handoff to Locking}
