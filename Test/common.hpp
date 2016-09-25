@@ -1,6 +1,7 @@
 #ifndef COMMON_HPP
 #define COMMON_HPP
 
+#include <atomic>
 #include <errno.h>
 #include <iostream>
 #include <pthread.h>
