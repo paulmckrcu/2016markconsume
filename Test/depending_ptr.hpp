@@ -24,7 +24,7 @@ public:
 
     // Constructors
     constexpr depending_ptr() noexcept;
-    explicit depending_ptr(pointer v) noexcept;
+    explicit depending_ptr(T* v) noexcept;
     depending_ptr(nullptr_t) noexcept;
     depending_ptr(const depending_ptr& d) noexcept;
     depending_ptr(const depending_ptr&& d) noexcept;
@@ -41,8 +41,8 @@ public:
     // Unary operators
     // No operator!
     // No prefix bitwise complement operator
-    element_type operator*(); // Prefix indirection operator
-    pointer operator->();
+    element_type operator*() noexcept; // Prefix indirection operator
+    pointer operator->() noexcept;
     depending_ptr<element_type> operator++(); // Prefix increment operator
     depending_ptr<element_type> operator++(int); // Postfix increment operator
     depending_ptr<element_type> operator--(); // Prefix decrement operator
@@ -130,9 +130,9 @@ void depending_ptr<T>::swap(depending_ptr<T>& d) noexcept
 
 // Unary operators
 template <typename T>
-T depending_ptr<T>::operator*() { return *dp_rep; }
+T depending_ptr<T>::operator*() noexcept { return *dp_rep; }
 template <typename T>
-typename depending_ptr<T>::pointer depending_ptr<T>::operator->() { return dp_rep; }
+typename depending_ptr<T>::pointer depending_ptr<T>::operator->() noexcept { return dp_rep; }
 template <typename T>
 depending_ptr<T> depending_ptr<T>::operator++()
 {
