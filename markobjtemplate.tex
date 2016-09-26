@@ -29,7 +29,7 @@ that used for atomics.
  6
  7   // Constructors
  8   constexpr depending_ptr() noexcept;
- 9   explicit depending_ptr(pointer v) noexcept;
+ 9   explicit depending_ptr(T* v) noexcept;
 10   depending_ptr(nullptr_t) noexcept;
 11   depending_ptr(const depending_ptr &d) noexcept;
 12   depending_ptr(const depending_ptr &&d) noexcept;
@@ -46,8 +46,8 @@ that used for atomics.
 23   // Unary operators
 24   // No operator!
 25   // No prefix bitwise complement operator
-26   element_type operator*();
-27   pointer operator->();
+26   element_type operator*() noexcept;
+27   pointer operator->() noexcept;
 28   depending_ptr<element_type> operator++();
 29   depending_ptr<element_type> operator++(int);
 30   depending_ptr<element_type> operator--();
