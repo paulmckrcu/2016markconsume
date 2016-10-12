@@ -317,7 +317,7 @@ It need not necessarily interact with the type system.
 10 {
 11   rcutest _Carries_dependency *p = rcu_dereference(gp);
 12   if (p) {
-13     assert(p->a >= 42);
+13     assert(p->a == 42);
 14     spin_lock(&p->lock);
 15     p = std::kill_dependency(p);
 17     p->a++;

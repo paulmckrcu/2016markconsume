@@ -28,10 +28,10 @@
 }
 \newcommand{\co}[1]{\lstinline[breaklines=yes,breakatwhitespace=yes]{#1}}
 
-\title{DNNNNR0: Marking {\tt memory\_order\_consume} Dependency Chains}
+\title{P0462R0: Marking {\tt memory\_order\_consume} Dependency Chains}
 
 \author{
-{\bf Doc. No.: } WG21/DNNNNR0 \\
+{\bf Doc. No.: } WG21/P0462R0 \\
 {\bf Date: } 2016-03-08 \\
 {\bf Reply to: } Paul E. McKenney, Torvald Riegel, Jeff Preshing, \\
 	Hans Boehm, Clark Nelson, Olivier Giroux, Lawrence Crowl, \\
@@ -80,6 +80,9 @@ alternatives for marking dependency chains (each headed by a
 \co{memory_order_consume}~\cite{RichardSmith2015N4527} load).
 It also adds a few additional alternatives based on discussions
 at the March 2016 meeting in Jacksonville, Florida,
+This document does not define the behavior of dependency chains, but instead
+only the syntax used to call the compiler's attention to them.
+Please see WG21/P0190R2 for detailed information on dependency-chain behavior.
 
 % A detailed change log appears starting on
 % page~\pageref{sec:Change Log}.
@@ -694,7 +697,7 @@ on the value of the C-preprocessor macro \co{FOO}.
 15
 16   p = rcu_dereference(gp);
 17   if (p) {
-18     assert(p->a >= 42);
+18     assert(p->a == 42);
 19     spin_lock(&p->lock);
 20     p = std::kill_dependency(p);
 21     p->a++;
@@ -933,12 +936,16 @@ The best possible method would have a row of all blank cells.
 This paper reviewed the 2016 discussions of \co{memory_order_consume}
 that took place at the Jacksonville meeting, presented several representative
 use cases, listed evaluation criteria, presented a number of
-marking proposals (two in depth), and provided a comparative
+marking proposals, and provided a comparative
 evaluation.
+The paper presents two of the marking proposals in depth, including
+code for the representative use cases.
 
-A combination of typed object modifier (for C compatibility) and
-a template class (for C++), similar to the approach used by atomics.
-For standalone applications, these should be further combined with an
+We recommend a combination of typed object modifier (for C compatibility)
+and a template class (for C++), which is similar to the approach used
+by atomics.
+For standalone applications such as the Linux kernel, there should
+additionally be an
 unmarked option, where the implementation assumes that everything that
 could legally marked is so marked.
 
