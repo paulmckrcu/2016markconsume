@@ -1,5 +1,16 @@
 \begin{thebibliography}{1}
 
+\bibitem{Compaq01}
+{\sc {Compaq Computer Corporation}}.
+\newblock Shared memory, threads, interprocess communication.
+\newblock Available: \url{http://h71000.www7.hp.com/wizard/wiz_2637.html},
+  August 2001.
+
+\bibitem{ALPHA95}
+{\sc Sites, R.~L., and Witek, R.~T.}
+\newblock {\em Alpha {AXP} Architecture}, second~ed.
+\newblock Digital Press, 1995.
+
 \bibitem{RichardSmith2015N4527}
 {\sc Smith, R.}
 \newblock Working draft, standard for programming language {C++}.
