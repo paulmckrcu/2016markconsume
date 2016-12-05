@@ -6,6 +6,13 @@
 \newblock Available: \url{http://h71000.www7.hp.com/wizard/wiz_2637.html},
   August 2001.
 
+\bibitem{MarkDHill2007DeconstructHTM}
+{\sc Hill, M.~D., Hower, D., Moore, K.~E., Swift, M.~M., Volos, H., and Wood,
+  D.~A.}
+\newblock A case for deconstructing hardware transactional memory systems.
+\newblock Tech. Rep. CS-TR-2007-1594, Department of Computer Sciences,
+  University of Wisconsin–Madison, Madison, Wisconsin, 2007.
+
 \bibitem{ALPHA95}
 {\sc Sites, R.~L., and Witek, R.~T.}
 \newblock {\em Alpha {AXP} Architecture}, second~ed.

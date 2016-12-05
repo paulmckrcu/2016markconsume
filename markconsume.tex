@@ -120,20 +120,20 @@ These points result in three known valid ways of handling
 \begin{enumerate}
 \item	Ignore the markings and promote \co{memory_order_consume}
 	to \co{memory_order_acquire}, as is current practice.
-\item	Ignore the markings, and on platforms other than DEC Alpha,\footnote{
-	DEC Alpha systems require that each \co{memory_order_consume} loads
-	be followed by full memory-barrier instructions if there are any
-	loads that depend on the \co{memory_order_consume}
-	load.~\cite{Compaq01,ALPHA95}.
-	Therefore, on DEC Alpha we recommend promoting
-	\co{memory_order_consume} loads to \co{memory_order_acquire}.}
-	emit the same code for
+\item	On all known platforms other than DEC Alpha,\footnote{
+		DEC Alpha systems require that each \co{memory_order_consume}
+		loads be followed by full memory-barrier instructions
+		if there are any loads that depend on the
+		\co{memory_order_consume} load~\cite{Compaq01,ALPHA95}.
+		Therefore, on DEC Alpha we recommend promoting
+		\co{memory_order_consume} loads to \co{memory_order_acquire}.}
+	ignore the markings, emit the same code for
 	\co{memory_order_consume} as is emitted for
 	\co{memory_order_relaxed}, and suppress troublesome
 	optimizations of pointers.
 	However, there was some difficulty in arriving at a precise
 	definition of ``troublesome''.
-\item	On platforms other than DEC Alpha, emit the same code for
+\item	On all known platforms other than DEC Alpha, emit the same code for
 	\co{memory_order_consume} as is emitted for \co{memory_order_relaxed}
 	and suppress troublesome optimizations of marked pointers.
 	The fact that such optimizations need not be suppressed
@@ -148,6 +148,19 @@ These points result in three known valid ways of handling
 	uses operator overloading so that the usual relational
 	operators invoke these intrinsics.
 \end{enumerate}
+
+The key requirement enabling \co{memory_order_relaxed} code to be
+emitted for \co{memory_order_consume} loads is the preservation
+of address and data dependencies through certain operations on
+pointers, as detailed in WG21/P0190R2.
+All known systems other than DEC Alpha preserve dependencies as required.
+``Troublesome optimizations'' can be roughly characterized as user-visible
+data speculation.
+Note that hardware speculation and leveraging trans\-ac\-tional-mem\-o\-ry
+hardware to carry out software speculation are not
+user-visible~\cite{MarkDHill2007DeconstructHTM},
+and thus are consistent with emitting \co{memory_order_relaxed} code
+for \co{memory_order_consume} loads.
 
 However, a number of ways of marking dependency chains have been
 proposed and there was nothing resembling any sort of agreement
