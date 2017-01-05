@@ -32,7 +32,7 @@
 
 \author{
 {\bf Doc. No.: } WG21/P0462R1 \\
-{\bf Date: } 2016-10-13 \\
+{\bf Date: } 2017-01-04 \\
 {\bf Reply to: } Paul E. McKenney, Torvald Riegel, Jeff Preshing, \\
 	Hans Boehm, Clark Nelson, Olivier Giroux, Lawrence Crowl, \\
 	JF Bastien, and Micheal Wong \\
@@ -80,12 +80,15 @@ alternatives for marking dependency chains (each headed by a
 \co{memory_order_consume}~\cite{RichardSmith2015N4527} load).
 It also adds a few additional alternatives based on discussions
 at the March 2016 meeting in Jacksonville, Florida,
+It contains updates based on feedback from the 2016 meeting in
+Issaquah, Washington, and has also been reorganized to place the
+alternatives not taken into an appendix.
 This document does not define the behavior of dependency chains, but instead
 only the syntax used to call the compiler's attention to them.
 Please see WG21/P0190R2 for detailed information on dependency-chain behavior.
 
-% A detailed change log appears starting on
-% page~\pageref{sec:Change Log}.
+A detailed change log starts on
+page~\pageref{sec:Change Log}.
 
 \section{Introduction}
 \label{sec:Introduction}
@@ -763,67 +766,20 @@ no effect on code generation.
 \section{Marking Proposals}
 \label{sec:Marking Proposals}
 
-The following sections present alternative marking proposals.
-Whatever proposal is chosen, implementors are encouraged to provide
-a means (for example, a command-line argument) to cause the
-implementation to act as if markings were placed everywhere they
-could reasonably be placed.
-This approach permits unmarked programs containing dependency chains
-to be handled in a reasonably natural manner.
+This section presents a pair of marking proposals that (in combination)
+appear to meet the needs of dependency-chain users (at least assuming
+that compilers provide options that treat all variables that could
+carry a dependency as if they carried a dependency).
 
-Note that many of these proposals consist only of short descriptions.
-Only proposals having proponents willing to fill them out should be
-considered for standardization.
-
-\subsection{Mark Translation Unit}
-\label{sec:Mark Translation Unit}
-
-\input{transunit}
-
-\subsection{Mark Range of Code}
-\label{sec:Mark Range of Code}
-
-\input{rangeofcode}
-
-\subsection{Mark Functions}
-\label{sec:Mark Functions}
-
-\input{markfunc}
-
-\subsection{Mark Objects}
-\label{sec:Mark Objects}
-
-This class of proposals marks the objects that are to carry dependencies.
-These objects must be of pointer type.
-Note that implementations requiring point-to-point associations between
-each \co{memory_order_consume} load and its corresponding dependent
-memory references can generate these associations based on the
-operations carried out on a given marked object.
-
-\subsubsection{Attribute}
-\label{sec:Attribute}
-
-\input{markobjattr}
-
-\subsubsection{Type Qualifier}
-\label{sec:Type Qualifier}
-
-\input{markobjtypeq}
-
-\subsubsection{Object Modifier}
+\subsection{Object Modifier}
 \label{sec:Object Modifier}
 
 \input{markobjmod}
 
-\subsubsection{Template}
+\subsection{Template}
 \label{sec:Template}
 
 \input{markobjtemplate}
-
-\subsection{Mark Root/Leaf Pairs}
-\label{sec:Mark Root/Leaf Pairs}
-
-\input{markrootleaf}
 
 \section{Evaluation}
 \label{sec:Evaluation}
@@ -859,34 +815,35 @@ Mark:
 	\hline
 %	 EC  EM  PD    CF  CC  CC  FV
 \hline
-Translation Unit
-	& T &   & N   &   & m &   &  N \\
-\hline
-Range of Code
-	& t &   & N   & m & m &   &  N \\
-\hline
-Functions
-	& t &   & N   & m & m &   &  N \\
-\hline
-Objects
-	&   &   &     &   &   &   &    \\
-\hline
-~~~~Attribute
-	&   & o &     & t & t & a &    \\
-\hline
-~~~~Type Qualifier
-	&   & o &     &   &   &   &  N \\
-\hline
-~~~~Modifier
-	&   & o &     & t & t &   &    \\
-\hline
-~~~~Template
-	&   & o &     &   &   & N &    \\
-\hline
-~~~~Template+Modifier
+Modifier+Template (Sections~\ref{sec:Object Modifier} and~\ref{sec:Template})
 	&   & o &     &   &   &   &    \\
 \hline
-Root/Leaf
+\hline
+Translation Unit (Appendix~\ref{sec:Mark Translation Unit})
+	& T &   & N   &   & m &   &  N \\
+\hline
+Range of Code (Appendix~\ref{sec:Mark Range of Code})
+	& t &   & N   & m & m &   &  N \\
+\hline
+Functions (Appendix~\ref{sec:Mark Functions})
+	& t &   & N   & m & m &   &  N \\
+\hline
+Objects (Appendix~\ref{sec:Mark Objects})
+	&   &   &     &   &   &   &    \\
+\hline
+~~~~Attribute (Appendix~\ref{sec:Attribute})
+	&   & o &     & t & t & a &    \\
+\hline
+~~~~Type Qualifier (Appendix~\ref{sec:Type Qualifier})
+	&   & o &     &   &   &   &  N \\
+\hline
+~~~~Modifier (Section~\ref{sec:Object Modifier})
+	&   & o &     & t & t &   &    \\
+\hline
+~~~~Template (Section~\ref{sec:Template})
+	&   & o &     &   &   & N &    \\
+\hline
+Root/Leaf (Appendix~\ref{sec:Mark Root/Leaf Pairs})
 	&   & A &     & ? & ? & ? &  ? \\
 \hline
 Nothing
@@ -899,6 +856,8 @@ Nothing
 Table~\ref{tab:Dependency-Chain Marking Evaluation}
 provides a rough comparison between the various marking methods, and
 also includes the unmarked option for comparison purposes.
+The recommended approach, Modifiers+Template, appears at the
+beginning of the table, followed by various other proposals.
 
 For ease of compilation, the cells corresponding to methods that
 explicitly mark dependency chains or that don't require marking at all
@@ -942,7 +901,7 @@ verification, but the specific proposal rules this out by requiring that
 the compiler treat \co{memory_order_consume} loads as potentially
 returning any value from the type.
 
-Following the lead of C11 and C++11 atomics, the ``Template+Modifier''
+Following the lead of C11 and C++11 atomics, the ``Modifier+Template''
 row covers the combination of
 marking objects with template classes (for C++) and with an
 typed object modifier (for C), a combination that appears to be quite
@@ -980,16 +939,73 @@ could legally marked is so marked.
 \bibliographystyle{acm}
 \bibliography{bib/RCU,bib/WFS,bib/hw,bib/os,bib/parallelsys,bib/patterns,bib/perfmeas,bib/refs,bib/syncrefs,bib/search,bib/swtools,bib/realtime,bib/TM,bib/standards,bib/maze}
 
-% \section*{Change Log}
-% \label{sec:Change Log}
+\clearpage
+\appendix
 
-% This paper first appeared as {\bf N4026} in May of 2014.
-% Revisions to this document are as follows:
+\section{Roads Not Taken}
+\label{sec:Roads Not Taken}
 
-% \begin{itemize}
-% \item	Mark the paper as a revision of N4036.
-% 	(July 17, 2014.)
-% \end{itemize}
+This appendix lists proposals that were never filled out, and thus not
+selected.
+
+\subsection{Mark Translation Unit}
+\label{sec:Mark Translation Unit}
+
+\input{transunit}
+
+\subsection{Mark Range of Code}
+\label{sec:Mark Range of Code}
+
+\input{rangeofcode}
+
+\subsection{Mark Functions}
+\label{sec:Mark Functions}
+
+\input{markfunc}
+
+\subsection{Mark Objects}
+\label{sec:Mark Objects}
+
+This class of proposals marks the objects that are to carry dependencies.
+These objects must be of pointer type.
+Note that implementations requiring point-to-point associations between
+each \co{memory_order_consume} load and its corresponding dependent
+memory references can generate these associations based on the
+operations carried out on a given marked object.
+
+\subsubsection{Attribute}
+\label{sec:Attribute}
+
+\input{markobjattr}
+
+\subsubsection{Type Qualifier}
+\label{sec:Type Qualifier}
+
+\input{markobjtypeq}
+
+\subsection{Mark Root/Leaf Pairs}
+\label{sec:Mark Root/Leaf Pairs}
+
+\input{markrootleaf}
+
+\section{Change Log}
+\label{sec:Change Log}
+
+This paper first appeared as {\bf WG21/P0462R1} in October of 2016.
+Revisions to this document are as follows:
+
+\begin{itemize}
+\item	Switch to one-column mode for ease of exposition.
+	(November 12, 2016.)
+\item	Reword relationship between \co{memory_order_consume}
+	and \co{memory_order_relaxed} per Lawrence Crowl feedback.
+	(November 16, 2016.)
+\item	Wordsmithing and requirements adjustments
+	per Lawrence Crowl feedback.
+	(December 5, 2016.)
+\item	Move proposals not filled out to appendix.
+	(January 4, 2017.)
+\end{itemize}
 
 % At this point, the paper was published as {\bf P0098R1}.
 
