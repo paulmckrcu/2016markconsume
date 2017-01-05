@@ -16,7 +16,7 @@ It need not necessarily interact with the type system.
 11
 12 void thread1()
 13 {
-14   rcutest _Carries_dependency *p = rcu_dereference(gp);
+14   rcutest *_Carries_dependency p = rcu_dereference(gp);
 15   if (p)
 16     p->a = 43;
 17 }
@@ -37,7 +37,7 @@ It need not necessarily interact with the type system.
  6 }
  7
  8 void
- 9 thread1_help(rcutest _Carries_dependency *q)
+ 9 thread1_help(rcutest *_Carries_dependency q)
 10 {
 11   if (q)
 12     assert(q->a == 42);
@@ -45,7 +45,7 @@ It need not necessarily interact with the type system.
 14
 15 void thread1()
 16 {
-17   rcutest _Carries_dependency *p = rcu_dereference(gp);
+17   rcutest *_Carries_dependency p = rcu_dereference(gp);
 18   thread1_help(p);
 19 }
 \end{verbatim}
@@ -64,14 +64,14 @@ It need not necessarily interact with the type system.
  5   rcu_assign_pointer(gp, p);
  6 }
  7
- 8 rcutest _Carries_dependency *thread1_help()
+ 8 rcutest *_Carries_dependency thread1_help()
  9 {
 10   return rcu_dereference(gp);
 11 }
 12
 13 void thread1()
 14 {
-15   rcutest _Carries_dependency *p = thread1_help();
+15   rcutest *_Carries_dependency p = thread1_help();
 16   if (p)
 17     assert(p->a == 42);
 18 }
@@ -95,8 +95,8 @@ It need not necessarily interact with the type system.
  9   rcu_assign_pointer(gsgp, p);
 10 }
 11
-12 rcutest _Carries_dependency *
-13 thread1_help(rcutest _Carries_dependency *p)
+12 rcutest *_Carries_dependency 
+13 thread1_help(rcutest *_Carries_dependency p)
 14 {
 15   if (p)
 16     assert(p->a == 42);
@@ -105,7 +105,7 @@ It need not necessarily interact with the type system.
 19
 20 void thread1(void)
 21 {
-22   rcutest _Carries_dependency *p = rcu_dereference(gp);
+22   rcutest *_Carries_dependency p = rcu_dereference(gp);
 23   p = thread1_help(p);
 24   if (p)
 25     assert(p->a == 43);
@@ -127,14 +127,14 @@ It need not necessarily interact with the type system.
  6 }
  7
  8 void
- 9 thread1_help1(rcutest _Carries_dependency *q)
+ 9 thread1_help1(rcutest *_Carries_dependency q)
 10 {
 11   if (q)
 12     assert(q->a == 42);
 13 }
 14
 15 void
-16 thread1_help2(rcutest _Carries_dependency *q)
+16 thread1_help2(rcutest *_Carries_dependency q)
 17 {
 18   if (q)
 19     assert(q->a != 43);
@@ -142,7 +142,7 @@ It need not necessarily interact with the type system.
 21
 22 void thread1()
 23 {
-24   rcutest _Carries_dependency *p = rcu_dereference(gp);
+24   rcutest *_Carries_dependency p = rcu_dereference(gp);
 25   thread1_help1(p);
 26   thread1_help2(p);
 27 }
@@ -167,7 +167,7 @@ It need not necessarily interact with the type system.
 10 }
 11
 12 void
-13 thread1_help(rcutest _Carries_dependency *q)
+13 thread1_help(rcutest *_Carries_dependency q)
 14 {
 15   if (q)
 16     assert(q->a == 42);
@@ -175,13 +175,13 @@ It need not necessarily interact with the type system.
 18
 19 void thread1()
 20 {
-21   rcutest _Carries_dependency *p = rcu_dereference(gp);
+21   rcutest *_Carries_dependency p = rcu_dereference(gp);
 22   thread1_help(p);
 23 }
 24
 25 void thread2()
 26 {
-27   rcutest1 _Carries_dependency *p1 = rcu_dereference(g1p);
+27   rcutest1 *_Carries_dependency p1 = rcu_dereference(g1p);
 28   thread1_help(&p1->rt);
 29 }
 \end{verbatim}
@@ -207,19 +207,19 @@ It need not necessarily interact with the type system.
 12 }
 13
 14 void
-15 thread1a_help(rcutest _Carries_dependency *q)
+15 thread1a_help(rcutest *_Carries_dependency q)
 16 {
 17   assert(q->a == 42);
 18 }
 19
 20 void
-21 thread1b_help(rcutest _Carries_dependency *q)
+21 thread1b_help(rcutest *_Carries_dependency q)
 22 {
 23   assert(q->b == 43);
 24 }
 25
 26 void
-27 thread1_help(rcutest _Carries_dependency *q)
+27 thread1_help(rcutest *_Carries_dependency q)
 28 {
 29   if (q) {
 30     thread1a_help(q);
@@ -229,13 +229,13 @@ It need not necessarily interact with the type system.
 34
 35 void thread1()
 36 {
-37   rcutest _Carries_dependency *p = rcu_dereference(gp);
+37   rcutest *_Carries_dependency p = rcu_dereference(gp);
 38   thread1_help(p);
 39 }
 40
 41 void thread2()
 42 {
-43   rcutest1 _Carries_dependency *p1 = rcu_dereference(g1p);
+43   rcutest1 *_Carries_dependency p1 = rcu_dereference(g1p);
 44   thread1_help(&p1->rt);
 45 }
 \end{verbatim}
@@ -262,20 +262,20 @@ It need not necessarily interact with the type system.
 13
 14 #ifdef FOO
 15 void
-16 thread1a_help(rcutest _Carries_dependency *q)
+16 thread1a_help(rcutest *_Carries_dependency q)
 17 {
 18   assert(q->a == 42);
 19 }
 20 #endif
 21
 22 void
-23 thread1b_help(rcutest _Carries_dependency *q)
+23 thread1b_help(rcutest *_Carries_dependency q)
 24 {
 25   assert(q->b == 43);
 26 }
 27
 28 void
-29 thread1_help(rcutest _Carries_dependency *q)
+29 thread1_help(rcutest *_Carries_dependency q)
 30 {
 31   if (q) {
 32 #ifdef FOO
@@ -287,13 +287,13 @@ It need not necessarily interact with the type system.
 38
 39 void thread1()
 40 {
-41   rcutest _Carries_dependency *p = rcu_dereference(gp);
+41   rcutest *_Carries_dependency p = rcu_dereference(gp);
 42   thread1_help(p);
 43 }
 44
 45 void thread2()
 46 {
-47   rcutest1 _Carries_dependency *p1 = rcu_dereference(g1p);
+47   rcutest1 *_Carries_dependency p1 = rcu_dereference(g1p);
 48   thread1_help(&p1->rt);
 49 }
 \end{verbatim}
@@ -315,7 +315,7 @@ It need not necessarily interact with the type system.
  8
  9 void thread1()
 10 {
-11   rcutest _Carries_dependency *p = rcu_dereference(gp);
+11   rcutest *_Carries_dependency p = rcu_dereference(gp);
 12   if (p) {
 13     assert(p->a == 42);
 14     spin_lock(&p->lock);
